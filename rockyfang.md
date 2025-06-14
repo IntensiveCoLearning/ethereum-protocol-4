@@ -11,6 +11,7 @@ timezone: UTC+8
 笔记按内容整理链接：https://github.com/rockyfang2024/Web3Learn/tree/main/ETH%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0
 2. 你认为你会完成本次残酷学习吗？   这次一定会
 3. 你的联系方式（推荐 Telegram）  https://t.me/rockyfang2024
+
 ## Notes
 
 <!-- Content_START -->
