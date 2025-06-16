@@ -14,9 +14,11 @@ timezone: UTC+8
 
 <!-- Content_START -->
 
-### 2025.07.11
+### 2025.06.16
 
-笔记内容
+简单过了一遍 https://epf.wiki/#/
+整理了学习计划
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/StudyPlan.md
 
 ### 2025.07.12
 
