@@ -86,7 +86,6 @@ func build(env environment, pool txpool.Pool, state state.StateDB) (types.Block,
 8. 我们通过获取一组交易和相关区块信息， 以最终确定生成一个完整的区块, 这样做的目的是为了最后进行一定的计算。由于 header 包含交易根、收据根和提款根，因此必须通过默克尔化列表来计算这些值并将其添加到块的 header 中。
 
 ### 2025.06.17
-# 万物的起点: Geth Start
 
 ## geth 是什么？
 
