@@ -15,9 +15,10 @@ timezone: UTC+8
 
 <!-- Content_START -->
 
-### 2025.07.11
+### 2025.06.17
 
-笔记内容
+学习[《Geth 源码系列 I：Geth 整体架构》](https://forum.lxdao.io/t/geth-i-geth/2856/1)
+
 
 ### 2025.07.12
 
