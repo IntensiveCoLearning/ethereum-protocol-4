@@ -140,7 +140,7 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
 
 ## 2025.06.17
 
-### 以太坊 The Merge 升级深度解析笔记
+### 以太坊 The Merge 升级笔记
 
 #### 一、核心概念与背景
 
