@@ -21,5 +21,6 @@ timezone: UTC+8
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/StudyPlan.md
 
 ### 2025.07.12
-
+eth node架构
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/EthereumClientArchitecture.md
 <!-- Content_END -->
