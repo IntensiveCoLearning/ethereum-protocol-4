@@ -159,7 +159,7 @@ Passcode: 955074
 | [MrWynn](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/MrWynn.md) | ✅ | ✅ | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [OrionWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/OrionWu.md) | ✅ |   | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [chesley666](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/chesley666.md) | ✅ |   | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
-| [ohko4711](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/ohko4711.md) | ✅ |   | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [ohko4711](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/ohko4711.md) | ✅ | ✅ | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [fffuuuming](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/fffuuuming.md) | ✅ | ✅ | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [qingoba](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/qingoba.md) | ⭕️ |   | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [kuove](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/kuove.md) | ✅ | ✅ | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
@@ -167,6 +167,7 @@ Passcode: 955074
 | [Bo](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Bo.md) | ✅ | ✅ | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [0xAlexWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/0xAlexWu.md) | ⭕️ |   | | | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 <!-- END_COMMIT_TABLE -->
+
 
 
 
