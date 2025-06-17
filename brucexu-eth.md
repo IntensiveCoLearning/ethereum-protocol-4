@@ -237,4 +237,65 @@ Epoch N+1: [Slot 32] [Slot 33] ... [Slot 63]
 - **活跃性**: 大多数验证者在线就能运行
 - **效率**: 签名聚合减少网络开销
 
+# 2025.07.18
+
+Bruce Xu, [18/6/2025 08:38]
+我突然想到，未来的以太坊一种节点方式是在客户端，比如 dapp 里面。当用户打开和使用 dapp 的时候，就在运行一个节点，比如浏览器网页。目前有轻节点实现类似的效果 https://eth-light.xyz/ 但是出块什么的不知道行不行。
+理论上似乎是可行的，本质上就是一个可以联通网络的可运行代码？不过可能存储层面会有一些问题
+如果硬件性能足够强，客户端足够轻量，其实是可以实现的？这样可以实现用户边用以太坊边维持以太坊网络运行，自己的安全也控制在自己手里。完事了越多用户越安全
+
+### Faster transaction confirmations
+
+A great improvement if transaction confirmation from 12s to 4s.
+
+还可以改善 L2 的去中心化，让大家运行在 based rollups 上面。
+
+实现方案：
+
+1. Reduce slot times to 8s or 4s
+
+- finality 采用 3 轮验证，每一轮作为一个独立 block 的话，12s 就可以完成最终性确认
+  - 但是网络延迟要求更加严格，增加了共识协议和状态的复杂度
+  - 可以按照阶段进行体验优化，比如 4s 的时候是已经提交，4s 是正在处理大概率可以，4s 是已经完成，不可撤销
+
+2. Pre-confirmations
+
+- proposer 在 slot 开始之后，接收到了 tx 就不停地发布 pre-confirmation message 的消息向外界同步我即将打包的 tx 信息，方便快速确认是否被包含
+- 如果宣称包含，但是没有实际包含，proposer 需要被惩罚，或者通过某种机制进行确认
+
+问题：
+
+- Proposer 掉线了或者整个 slot 错过了，可能会导致 tx 被延迟？回答：确实是个问题，还是会遇到这个最坏情况
+- 在这里面 MEV 是怎么实施的？如果最后来了一个比较高价值的 tx，proposer 可以取消 pre-confirmation 吗？
+  - 为 pre-confirmation 的 tx 额外增加保障金？和交易费？这是一个开放式需要解决的问题
+- 这个发送的消息在网络中广播，还是会有延迟或者丢失，是否会引起
+  网络拥堵？
+  - 似乎是 proposer 直接发送，而且是单向广播，不需要交互？似乎还好。那么 proposer 的网络连通性是不是会有问题？如果它的网络不稳定没有发出去？
+
+目前遇到的问题：
+
+- 降低 slot time 主要是节点的网络要求会变高，导致 validator 中心化
+
+我个人感觉 pre-confirmation 的方案是更加可靠的，同时需要配套的 dapp SDK 来实现监听 pre-confirmation 消息并且做出响应和 UX 优化。
+
+### Increasing the quorum threshold
+
+目前是 67% stakers 支持就可以确认 block。增加到 80% 可能会增加安全性，可以在极端情况下暂时停止最终性确认。比如恶意攻击或者客户端出 bug。
+
+这样让 solo stakers 的价值更大，比如需要 80% 的支持才可以的话，有 21% 的反对就可以让这个出块暂停。然后 solo stakers 不像是 staking pool 一样被容易攻击和控制，所以他们就可以发挥力量停掉。21% 的 solo stakers 是一个可以尝试实现的目标。
+
+核心理念就是：停止比出错更好。
+
+### Quantum-resistance
+
+量子计算大概在 2030s 可以击溃目前的密码学。目前 Ethereum 使用的 elliptic curves 等核心加密学算法需要替换成抗量子攻击的算法。
+
+TODO Luban https://docs.luban.wtf/learn/fundamentals/what
+
+TODO Based rollups—superpowers from L1 sequencing https://ethresear.ch/t/based-rollups-superpowers-from-l1-sequencing/15016
+
+TODO Based preconfirmations https://ethresear.ch/t/based-preconfirmations/17353
+
+TODO APS https://www.ephema.io/blog/beyond-the-stars-an-introduction-to-execution-tickets-on-ethereum
+
 <!-- Content_END -->
