@@ -12,7 +12,7 @@ timezone: UTC+12
 
 <!-- Content_START -->
 
-# 2025.07.16
+# 2025.06.16
 
 我的学习计划大概是：
 
@@ -103,7 +103,7 @@ which validator is going to propose the next block is known ahead of time, there
   - 提高网络去中心化，降低大型质押池对小型验证者的攻击
   - 防止 MEV 攻击等等，主要是保护 proposer，防止一直出不了 slot
 
-# 2025.07.17
+# 2025.06.17
 
 two solutions:
 
@@ -237,7 +237,7 @@ Epoch N+1: [Slot 32] [Slot 33] ... [Slot 63]
 - **活跃性**: 大多数验证者在线就能运行
 - **效率**: 签名聚合减少网络开销
 
-# 2025.07.18
+# 2025.06.18
 
 Bruce Xu, [18/6/2025 08:38]
 我突然想到，未来的以太坊一种节点方式是在客户端，比如 dapp 里面。当用户打开和使用 dapp 的时候，就在运行一个节点，比如浏览器网页。目前有轻节点实现类似的效果 https://eth-light.xyz/ 但是出块什么的不知道行不行。
