@@ -40,4 +40,43 @@ epochs(32 slots)
 
 ### 2025.06.17
 
+执行客户端：监听网络中广播的交易，并在EVM中执行，保存所有以太坊数据的最新状态和数据库
+共识客户端：实现了权益证明共识算法，该算法使网络能够基于执行客户端验证的数据达成共识。验证者客户端可以被添加到共识客户端中
+
+使用两个客户端才能成为验证者，可能更多是因为The Merge时以太坊PoW与信标链是两个独立的链，因此需要两个客户端。
+
+![alt text](https://ethereum.org/content/developers/docs/nodes-and-clients/eth1eth2client.png)
+
+Full node只保留相对较新的数据的本地副本（通常是最近的128个区块），允许删除旧数据以节省磁盘空间。
+
+Archive node保留了以太坊网络的所有历史数据，允许查询任何区块或交易的状态。
+
+Light node仅下载区块头，不存储区块数据，而是通过与全节点通信来验证交易和区块。它们通常用于移动设备或资源受限的环境。不参与共识。
+
+#### ethereum/go-ethereum
+
+Geth由几个子系统组成：
+
+1. Blockchain Core：管理区块、执行交易并维护状态
+2. Networking：处理节点间的通信
+3. User Interface：提供命令行界面和JSON-RPC接口
+4. Storage：管理数据存储，包括区块、交易和状态
+5. Consensus：实现区块验证的共识规则
+
+eth/backend.go是协调所有主要子系统的中央组件。它初始化和管理区块链、交易池、P2P 网络和其他服务。
+core/blockchain.go处理核心区块链操作：
+
+- 区块处理和验证
+- 链重组
+- 状态管理
+- 交易执行
+
+core/state/statedb.go维护以太坊世界状态：
+
+- 账户余额和nonces
+- 合约代码和存储
+- 交易执行过程中的状态转换
+
+### 2025.06.18
+
 <!-- Content_END -->
