@@ -68,5 +68,40 @@ timezone: UTC+8
 > END_OF_TODAY [BOOKMARK](https://epf.wiki/#/wiki/CL/overview?id=blobs)
 
 ### 2025.06.17
+#### 📗Consensus
+**Blobs**：[EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) 引入，是Cancun硬分叉的一部分。允许每个区块携带3-6个 Blob sidecars，相当于为网络添加了一个数据层 (*data accessibility layer*)
+- 每个Blob的保留期限是 4096 epochs，过期即会drop掉
+- KZG commitment
+
+**Finalization**：
+- validator有两种投票：LMD GHOST 投票给普通区块，Casper FFG投票给checkpoints
+- validator只能给自己对应的slot投LMD GHOST票，而投票checkpoints时，所有validator都可以投Casper FFG票，这个是一个epoch中随时可以投的
+- 并且validator也可以延迟给slot投票，不一定非要在自己的slot立即投票
+- 当然，立即投票的奖励是最高的，延迟投票会减少奖励
+- checkpoint是每个epoch的第一个区块
+- 每个 Casper FFG 投票，需要指定 
+	1. 其源checkpoint：以往epoch的checkpoint
+	2. 目标checkpoint：当前epoch的checkpoint
+- checkpoint获得超 2/3 的绝对多数投票Casper FFG后，将会被 *justified*
+- checkpoint被 *justified* 之后，其前一个checkpoint才会被 *finalized*
+- 也就是说一个checkpoint被finalized大概需要2个epoch的时间（12.8分钟）
+
+**Slashable Offenses**
+- Double Proposal
+- LMD GHOST Double Vote
+- FFG Surround vote
+- FFG Double Vote
+
+**validator** 初始需要32个ETH才能激活，当其质押金额少于16ETH时会失活
+- 需要服务2048个epoch之后才能主动退出
+- 提出退出后，需要4个epoch的冷却期才能退出，用于留给slash的时间窗口
+- 同样的，提起激活前也需要有4个epoch的窗口期
+- 退出后，未被slash的在 $2^8$ epoch（27h）之后可以提款；而被slash的则需要 $2^13$ epoch （36天）才能退款
+- 每个epoch能激活和失活的validator数量有一个规定的阈值
+	![validator-lifecycle](https://epf.wiki/images/cl/validator-lifecycle.png)
+
+> <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/cl-architecture)
+
+### 2025.06.18
 
 <!-- Content_END -->
