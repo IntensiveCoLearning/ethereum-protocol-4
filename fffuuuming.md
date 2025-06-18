@@ -123,4 +123,36 @@ The Beacon Chain maintains:
 - A validator registry
 - Validator states (active, exited, slashed, etc.)
 - Attestations (votes)
+### 2025.06.18
+[Consensus Layer Overview](https://epf.wiki/#/wiki/CL/overview?id=consensus-layer-overview)
+---
+#### [EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) (Proto-Danksharding)
+Introduces a data availability layer to Ethereum, allowing for the **temporary storage** of arbitrary data on the blockchain: **`Blob`**, which provide cheap data availability for L2s like rollups (reducing gas costs).
+- **Retention**: Each `blob` is Retained for 4096 epochs (~18 days), new blocks keep adding `blobs`, while older ones are deleted.
+- **Storage Impact**: Nodes need to prepare extra disk usage for 
+    ```
+    131,928 bytes/blob * 4096 epochs * 32 blocks/epoch * 3~6 blobs/block 
+    ≈ 52 ~ 104 GB total temporary storage needed
+    ```
+- **Cryptographic Integrity**
+    - Each blob is committed via **[KZG commitments](https://epf.wiki/#/wiki/Cryptography/kzg)** for **integrity verification** & Compatibility with **proposer-builder separation**
+    - Needs a trusted setup, done via the **[KZG Ceremony](https://github.com/ethereum/kzg-ceremony)**
+#### Checkpoints (EBB): Used for finalizing the blockchain.
+- One per epoch: block at the **first slot of an epoch**, or the **latest prior block** if empty
+- A block becomes a checkpoint if it **receives attestations from a majority of validators**
+- A block is considered **final** when it **is included in two-thirds of the most recent checkpoint attestations**, ensuring it cannot be reverted
+![截圖 2025-06-18 下午2.00.03](https://hackmd.io/_uploads/S1gPLR1Vgl.png)
+$\mathrm{EBB(n, k)}$: the j-th epoch boundary block of B, to be the block with the highest slot less than or equal to jC in chain(B)
+Epoch Boundary Block at slot number n, serving as the checkpoint of epoch k, so $\mathrm{EBB(n, k)}$ = `slot 180`
+
+Validators cast two types of votes:
+- **LMD GHOST votes** for `blocks`
+- **Casper FFG votes** for `checkpoints`: includeing a source checkpoint from a previous epoch and a target checkpoint from the current epoch. (e.g. a validator in Epoch 1 might vote for a source checkpoint at the genesis block and a target checkpoint at Slot 64)
+
+Note that only validators assigned to a slot cast LMD GHOST votes, while all validators cast FFG votes for epoch checkpoints.
+#### Justification & Finality
+- **Supermajority**: ⅔ of the total validator balance
+- **justified**: Once a checkpoint receives a supermajority
+- **finalized**: the subsequent epoch's checkpoint also achieves justification
+
 <!-- Content_END -->
