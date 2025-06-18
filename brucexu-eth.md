@@ -298,4 +298,6 @@ TODO Based preconfirmations https://ethresear.ch/t/based-preconfirmations/17353
 
 TODO APS https://www.ephema.io/blog/beyond-the-stars-an-introduction-to-execution-tickets-on-ethereum
 
+TODO 整理以太坊面临的量子算法危机和解决方法
+
 <!-- Content_END -->
