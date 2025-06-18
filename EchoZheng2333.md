@@ -37,7 +37,7 @@ Geth 从逻辑上可以分为 6 个部分：
 - RPC 服务：提供访问节点的能力，比如用户向节点发送交易，共识层和执行层之间的交互
 - BlockChain：负责管理以太坊的区块链数据
 
-[![2025-06-16-18-31-01.jpg]（https://i.postimg.cc/hvWk5md7/2025-06-16-18-31-01.jpg）]（https://postimg.cc/G8KgBHzc）
+[![2025-06-16-18-31-01.jpg](https://i.postimg.cc/hvWk5md7/2025-06-16-18-31-01.jpg)](https://postimg.cc/G8KgBHzc)
 
 - 如果以一个抽象的维度来看以太坊的执行层，以太坊作为一台世界计算机，需要包括三个部分，网络、计算和存储，那么以太坊执行层中与这三个部分相对应的组件是：
     - 网络：devp2p
@@ -95,7 +95,7 @@ Geth 从逻辑上可以分为 6 个部分：
 
 ### 三、Geth 启动
 
-Geth 教程：[https://geth.ethereum.org/docs/getting-started]（https://geth.ethereum.org/docs/getting-started） （未维护？很多页面都无法访问）
+Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethereum.org/docs/getting-started) （未维护？很多页面都无法访问）
 
 - 在 Geth 中创建账户的方法有很多种。在本次学习中尝试使用了 Clef 来创建账户，它将用户的密钥管理与 Geth 解耦，使其更加模块化和灵活。
     ``` bash
@@ -227,11 +227,11 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started]（https://geth.et
 ### 四、技术实现路径分析
 
 1. **单时隙最终性实现路线**
-    [![1.png]（https://i.postimg.cc/Y96v2wzK/1.png）]（https://postimg.cc/gX0z4Q7N）
+    [![1.png](https://i.postimg.cc/Y96v2wzK/1.png)](https://postimg.cc/gX0z4Q7N)
 2. **关键研究链接**
-    1. [单时隙最终确定性路径]（https://notes.ethereum.org/@vbuterin/single_slot_finality）
-    2. [Orbit SSF 提案]（https://ethresear.ch/t/orbit-ssf-solo-staking-friendly-validator-set-management-for-ssf/19928）
-    3. [Whisk SSLE 协议]（https://ethresear.ch/t/whisk-a-practical-shuffle-based-ssle-protocol-for-ethereum/11763）
+    1. [单时隙最终确定性路径](https://notes.ethereum.org/@vbuterin/single_slot_finality)
+    2. [Orbit SSF 提案](https://ethresear.ch/t/orbit-ssf-solo-staking-friendly-validator-set-management-for-ssf/19928)
+    3. [Whisk SSLE 协议](https://ethresear.ch/t/whisk-a-practical-shuffle-based-ssle-protocol-for-ethereum/11763)
 
 ### 五、为什么这些很重要？
 
