@@ -86,7 +86,6 @@ func build(env environment, pool txpool.Pool, state state.StateDB) (types.Block,
 8. 我们通过获取一组交易和相关区块信息， 以最终确定生成一个完整的区块, 这样做的目的是为了最后进行一定的计算。由于 header 包含交易根、收据根和提款根，因此必须通过默克尔化列表来计算这些值并将其添加到块的 header 中。
 
 ### 2025.06.17
-# 万物的起点: Geth Start
 
 ## geth 是什么？
 
@@ -474,6 +473,137 @@ type handler struct {
 }
 ```
 
+### 2025.06.18
 
+## EOA账户和合约账户
+
+Ethereum 的运行是一种*基于交易的状态机模型*(Transaction-based State Machine)。整个系统由若干的账户组成 (Account)，类似于银行账户。状态(State)反应了某一账户(Account)在*某一时刻*下的值(value)。在以太坊中，State 对应的基本数据结构，称为 StateObject。当 StateObject 的值发生了变化时，我们称为*状态转移*。在 Ethereum 的运行模型中，StateObject 所包含的数据会因为 Transaction 的执行引发数据更新/删除/创建，引发状态转移，我们说：StateObject 的状态从当前的 State 转移到另一个 State。
+
+在 Ethereum 中，承载 StateObject 的具体实例就是 Ethereum 中的 Account 。通常，我们提到的 State 具体指的就是 Account 在某个时刻下所包含的数据的值。
+
+- Account --> StateObject
+- State   --> The value/data of the Account
+
+
+`外部账户(EOA):`是由用户直接控制的账户，负责签名并发起交易(Transaction)。用户通过控制 Account 的私钥来保证对账户数据的控制权。
+
+`合约账户(Contract):`，简称为合约，是由外部账户通过 Transaction 创建的。合约账户保存了**不可篡改的图灵完备的代码段**，以及一些**持久化的数据变量**。这些代码使用专用的图灵完备的编程语言编写(Solidity)，并通常提供一些对外部访问 API 接口函数。这些 API 接口函数可以通过构造 Transaction，或者通过本地/第三方提供的节点 RPC 服务来调用。这种模式构成了目前的 DApp 生态的基础。
+
+
+## StateObject
+
+在实际代码中，这两种 Account 都是由 `stateObject` 这一数据结构定义的。
+
+```go
+  type stateObject struct {
+    address  common.Address
+    addrHash common.Hash // hash of ethereum address of the account
+    data     types.StateAccount
+    db       *StateDB
+    dbErr error
+
+    // Write caches.
+    trie Trie // storage trie, which becomes non-nil on first access
+    code Code // contract bytecode, which gets set when code is loaded
+
+    // 这里的Storage 是一个 map[common.Hash]common.Hash
+    originStorage  Storage // Storage cache of original entries to dedup rewrites, reset for every transaction
+    pendingStorage Storage // Storage entries that need to be flushed to disk, at the end of an entire block
+    dirtyStorage   Storage // Storage entries that have been modified in the current transaction execution
+    fakeStorage    Storage // Fake storage which constructed by caller for debugging purpose.
+
+    // Cache flags.
+    // When an object is marked suicided it will be delete from the trie
+    // during the "update" phase of the state transition.
+    dirtyCode bool // true if the code was updated
+    suicided  bool
+    deleted   bool
+  }
+```
+
+### EOA Account Generation
+
+创建新账户的依赖的入口函数 `NewAccount` 位于 `accounts/keystore/keystore.go` 文件中。
+
+```go
+// passphrase 参数用于本地加密
+func (ks *KeyStore) NewAccount(passphrase string) (accounts.Account, error) {
+//生成account的函数
+ _, account, err := storeNewKey(ks.storage, crand.Reader, passphrase)
+ if err != nil {
+  return accounts.Account{}, err
+ }
+ // Add the account to the cache immediately rather
+ // than waiting for file system notifications to pick it up.
+ ks.cache.add(account)
+ ks.refreshWallets()
+ return account, nil
+}
+```
+
+上述代码段中，最核心的调用是 `storeNewKey` 函数。在 `storeNewKey` 函数中，首先就调用了 `newKey` 函数，该函数的主要功能就是生成一个账户需要的私钥和公钥对。而 `newKey` 函数的核心是调用了生成椭圆曲线加密对相关的函数 `ecdsa.GenerateKey`。
+
+```go
+func newKey(rand io.Reader) (*Key, error) {
+ privateKeyECDSA, err := ecdsa.GenerateKey(crypto.S256(), rand)
+ if err != nil {
+  return nil, err
+ }
+ return newKeyFromECDSA(privateKeyECDSA), nil
+}
+
+```
+
+在整个流程中，首先生成的是账户的私钥，而账户对应的地址，是基于该私钥在椭圆曲线上对用的公钥值经过哈希计算得到的。  
+如何从账户私钥计算出账户地址的。
+
+- 首先，我们在创建一个新的 EOA 账户的时候，首先会通过 `GenerateKey` 函数随机的得到一串私钥，它是一个 32bytes 长的变量，表现为64位16进制数。这个私钥就是平时需要用户激活钱包时，发送交易时必要的门禁卡，一旦这个私钥暴露了，钱包也将不再安全。
+  - 64个16进制位，256bit，32字节
+    `var AlicePrivateKey = "289c2857d4598e37fb9647507e47a309d6133539bf21a8b9cb6df88fd5232032"`
+- 在得到私钥后，我们使用私钥来计算公钥和地址地址。基于上述私钥，我们使用 ECDSA 算法，选择 spec256k1 曲线进行计算。通过将私钥带入到所选择的椭圆曲线中，计算出点的坐标即是公钥。以太坊和比特币使用了同样的 spec256k1 曲线，在实际的代码中，我们也可以看到在 go-Ethereum 直接调用了比特币的 secp256k1 的C语言代码。
+    `ecdsaSK, err := crypto.ToECDSA(privateKey)`
+- 对私钥进行椭圆加密之后，我们可以得到一个 64bytes 的数，它是由两个 32bytes 的数构成，这两个数代表了 spec256k1 曲线上某个点的 XY 坐标值。
+    `ecdsaPK := ecdsaSK.PublicKey`
+- 最终账户的地址，是基于上述公钥(ecdsaSK.PublicKey)进行 **Keccak-256算法** 计算之后得到的哈希值的后20个字节，用0x开头表示(Keccak-256 是 SHA-3（Secure Hash Algorithm 3）标准下的一种哈希算法)。
+    `addr := crypto.PubkeyToAddress(ecdsaSK.PublicKey)`
+
+#### Signature & Verification：签名与验证
+
+这里我们简述一下，怎么利用 ECDSA 来进行数字签名和校验的。
+
+- 以太坊签名校验的核心思想是:首先基于上面得到的ECDSA 下的私钥 ecdsaSK对数据 msg 进行签名 (sign) 得到 msgSig.
+    `sig, err := crypto.Sign(msg[:], ecdsaSK)`
+    `msgSig := decodeHex(hex.EncodeToString(sig))`
+- 然后基于 msg 和 msgSig 可以反推出来签名的公钥（用于生成账户地址的公钥ecdsaPK）。
+    `recoveredPub, err := crypto.Ecrecover(msg[:],msgSig)`
+- 通过反推出来的公钥可以得到发送者的地址，并与当前交易的发送者在 ECDSA 下的pk进行对比。
+    `crypto.VerifySignature(testPk, msg[:], msgSig[:len(msgSig)-1])`
+- 这套体系的安全性保证在于，即使知道了公钥 ecdsaPk/ecdsaSK.PublicKey也难以推测出 ecdsaSK以及生成他的 privateKey。
+
+## Contract：合约和合约存储
+
+### Contract Storage：合约存储
+
+ `Storage` 类型的定义。具体如下所示。
+
+```go
+type Storage map[common.Hash]common.Hash
+```
+
+我们可以看到，`Storage` 是一个 key 和 value 都是 `common.Hash` 类型的 map 结构。`common.Hash` 类型本质上是一个长度为 32bytes 的 `byte` 类型数组。
+
+从数据层面讲，外部账户(EOA)与合约账户(Contract)不同的点在于: 外部账户并没有维护自己的代码(codeHash)以及额外的 Storage 层。相比与外部账户，合约账户额外保存了一个存储层(Storage)用于存储合约代码中持久化的变量的数据。
+
+在 Ethereum 中，每个合约都维护了自己的*独立*的存储空间，用于保存合约中的持久化变量，我们称为 Storage 层。Storage 层的基本组成单元称为槽 (Slot)。若干个 Slot 按照栈(Stack)的方式顺序集合在一起就构造成了 Storage 层。每个 Slot 的大小是 256 bits，也就是最多保存 `32 bytes` 的数据。作为基本的存储单元，Slot 管理的方式与内存或者HDD中的基本单元的管理方式类似，通过地址索引的方式被上层函数访问。Slot的地址索引的长度同样是32 bytes(256 bits)，寻址空间从 0x0000000000000000000000000000000000000000000000000000000000000000 到 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF。因此，每个Contract的Storage层最多可以保存$2^{256} - 1$个 Slot。也就说在理论状态下，一个 Contract 可以最多保存 $(2^{256} - 1)$ 32 bytes的数据，这是个相当大的数字。
+
+为了更好的管理 Storage 层的 Slot 数据，Contract 同样使用 MPT 作为索引来管理 Storage 层的Slot。这里值得注意的是，合约 Storage 层的数据并不会跟随交易一起被打包进入 Block 中。正如我们之前提到的，管理合约账户中 Storage 层 Storage Trie 的根数据被保存在 StateAccount 结构体中的 Root 变量中(它是一个32bytes长的byte数组)。当某个 Contract 的 Storage 层的数据发生变化时，会向上传导，并更新 World State Root 的值，从而影响到Chain链上数据。目前，Storage 层的数据读取和修改是在执行相关 Transaction 的时候，通过调用 EVM 中的两个专用的指令 *OpSload* 和 *OpSstore* 来执行的。
+
+在 `go-ethereum` 中，变量对应的存储层的 Slot，是按照其在在合约中的声明顺序，从第一个 Slot（position：0）开始分配的。
+
+对于固定长度的变量，其值的所占用的 Slot 的位置在合约初始化开始的时候就已经分配的。即使变量只是被声明还没有真正的赋值，保存其值所需要的 Slot 也已经被 EVM 分配完毕。而不是在第一次进行变量赋值的时候，进行再对变量所需要的的 Slot 进行分配。
+
+`Geth`会将两个小于 32 bytes 长的变量合并到一个 Slot 中，这样的做法节省了物理空间，但是也同样带来读写放大的问题。因为在 `Geth` 中，读操作最小的读的单位都是按照 `32bytes` 来进行的(由于`OpSload`指令的实际调用)。在本例中，即使我们只需要读取`isTrue`或者`addr`这两个变量的值，在具体的函数调用中，我们仍然需要将对应的 Slot 先读取到内存中。同样的，如果我们想修改这两个变量的值，同样需要对整个的 Slot 进行重写。这无疑增加了额外的开销。所以在 Ethereum 使用 32 bytes 的变量，在某些情况下消耗的 Gas 反而比更小长度类型的变量要小(例如 unit8)。这也是为什么 Ethereum 官方也建议使用长度为 32 bytes 变量的原因。
+
+对于变长数组和 Map 结构的变量存储分配则相对的复杂。虽然 Map 本身就是 `key-value` 的结构，但是在 Storage 层并不直接使用 map 中 key 的值或者 key 的值的 sha3 哈希值来作为 Storage 分配的 Slot 的索引值。目前，EVM 首先会使用map中元素的key的值和当前Map变量声明位置对应的 slot 的值进行拼接，再使用拼接后的值的 `keccak256` 哈希值作为 Slot 的位置索引(Position)。
 
 <!-- Content_END -->
