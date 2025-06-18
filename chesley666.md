@@ -86,4 +86,60 @@ timezone: UTC+8
 
 ### 2025.06.17
 
+### 2025.06.18
+
+- [Possible futures of the Ethereum protocol, part 2: The Surge](https://vitalik.eth.limo/general/2024/10/17/futures2.html) | [中文翻译](https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293546&idx=1&sn=4170dca0fac69556c3e46539867bfeb7&scene=21#wechat_redirect)
+- Surge（激增）阶段目标：
+  - 通过 L1+L2 达到 100,000+ TPS；
+  - 保持 L1 的 去中心化与稳健性；
+  - 部分 L2 完全继承以太坊的核心属性（信任最小化、开放、抗审查）；
+  - 实现 跨 L2 最大互操作性，让用户感受像在“一个以太坊”里操作
+- Surge 核心技术路径
+
+  1. 可扩展性三角悖论
+
+     维持 去中心化、可扩展、与安全性之间的平衡极具挑战；
+
+     Surge 通过将执行高度搬到 Rollup，高效利用 L1 的数据功能来缓解该三角难题。
+     chaincatcher.com+4vitalik.eth.limo+4medium.com+4
+
+  2. 数据可用性采样（DAS）
+
+     Rollup 增加数据上链带来了带宽压力；
+
+     利用 EIP‑4844 blobs 已提升带宽；
+
+     下一步引入 DAS（如 PeerDAS/EIP‑7594），只需采样数据片段即可验证可用性，实现真正弹性的数据扩容。
+     vitalik.eth.limo+8medium.com+8m.theblockbeats.info+8
+
+  3. 数据压缩
+
+     除了采样，还需引入更强的数据压缩技术，减少链上数据占用（文章提及未来研究方向但未深入具体方案）。
+
+  4. 泛化 Plasma（Generalized Plasma）
+
+     回顾旧方案 Plasma，在 modern Rollup 框架下引入类似机制，实现更轻的状态证明与退出设计，以应对高频小额交易场景。
+     m.theblockbeats.info+4vitalik.eth.limo+4linkedin.com+4
+
+  5. L2 证明系统成熟
+
+     鼓励 L2 proof 技术进步（例如 ZK rollup 的证明性能、证明尺寸优化）；
+
+     为 Rollup 承诺高吞吐、低成本准备基础。
+     news.ycombinator.com+13vitalik.eth.limo+13linkedin.com+13
+
+  6. 跨 L2 互操作与 UX
+
+     改善用户在不同 Rollup 之间资产与体验迁移；
+
+     打造类似“以太坊全局”统一 UX。
+
+  7. L1 本身执行扩展
+
+     在 L1 直接提升执行能力仍是选项，比如提高 gas limit、优化 EVM（如 EOF 字节码）；
+
+     目标让 L1 可处理更多直接执行而非全部依赖 L2
+
+### 2025.06.19
+
 <!-- Content_END -->
