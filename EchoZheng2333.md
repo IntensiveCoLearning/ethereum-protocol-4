@@ -128,13 +128,13 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
             NA -> ipc -> NA
 
     Additional HTTP header data, provided by the external caller:
-            User-Agent: 「「
-            Origin: 「「
+            User-Agent: ""
+            Origin: ""
     Approve? [y/N]:
     > y
 
     # geth 终端
-    > [「0x12b275ea188d8b2e368880c15a3d7d60563af811「]
+    > ["0x12b275ea188d8b2e368880c15a3d7d60563af811"]
     ```
 - 如果 Clef 审批时间过长，此请求也可能会超时
 
