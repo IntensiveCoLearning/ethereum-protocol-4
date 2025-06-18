@@ -25,6 +25,7 @@ eth node架构
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/EthereumClientArchitecture.md
 
 ### 2025.06.18
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/GethArchitecture.md
 
 ### 2025.06.19
 
