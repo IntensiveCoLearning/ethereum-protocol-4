@@ -2,7 +2,7 @@
 timezone: UTC+8
 ---
 
-> 请在上边的 timezone 添加你的当地时区(UTC)，这会有助于你的打卡状态的自动化更新，如果没有添加，默认为北京时间 UTC+8 时区
+> 请在上边的 timezone 添加你的当地时区（UTC），这会有助于你的打卡状态的自动化更新，如果没有添加，默认为北京时间 UTC+8 时区
 
 
 # Echo
@@ -37,7 +37,7 @@ Geth 从逻辑上可以分为 6 个部分：
 - RPC 服务：提供访问节点的能力，比如用户向节点发送交易，共识层和执行层之间的交互
 - BlockChain：负责管理以太坊的区块链数据
 
-[![2025-06-16-18-31-01.jpg](https://i.postimg.cc/hvWk5md7/2025-06-16-18-31-01.jpg)](https://postimg.cc/G8KgBHzc)
+[![2025-06-16-18-31-01.jpg]（https://i.postimg.cc/hvWk5md7/2025-06-16-18-31-01.jpg）]（https://postimg.cc/G8KgBHzc）
 
 - 如果以一个抽象的维度来看以太坊的执行层，以太坊作为一台世界计算机，需要包括三个部分，网络、计算和存储，那么以太坊执行层中与这三个部分相对应的组件是：
     - 网络：devp2p
@@ -95,7 +95,7 @@ Geth 从逻辑上可以分为 6 个部分：
 
 ### 三、Geth 启动
 
-Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethereum.org/docs/getting-started) （未维护？很多页面都无法访问）
+Geth 教程：[https://geth.ethereum.org/docs/getting-started]（https://geth.ethereum.org/docs/getting-started） （未维护？很多页面都无法访问）
 
 - 在 Geth 中创建账户的方法有很多种。在本次学习中尝试使用了 Clef 来创建账户，它将用户的密钥管理与 Geth 解耦，使其更加模块化和灵活。
     ``` bash
@@ -128,13 +128,13 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
             NA -> ipc -> NA
 
     Additional HTTP header data, provided by the external caller:
-            User-Agent: ""
-            Origin: ""
+            User-Agent: 「「
+            Origin: 「「
     Approve? [y/N]:
     > y
 
     # geth 终端
-    > ["0x12b275ea188d8b2e368880c15a3d7d60563af811"]
+    > [「0x12b275ea188d8b2e368880c15a3d7d60563af811「]
     ```
 - 如果 Clef 审批时间过长，此请求也可能会超时
 
@@ -145,7 +145,7 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
 #### 一、核心概念与背景
 
 1. The Merge 的定义与意义
-    - **定义**：The Merge 是以太坊从工作量证明（PoW，需要大量电力的"挖矿"系统）向权益证明（PoS，"存钱生利息"的系统）过渡的关键升级
+    - **定义**：The Merge 是以太坊从工作量证明（PoW，需要大量电力的「挖矿」系统）向权益证明（PoS，「存钱生利息」的系统）过渡的关键升级
     - **时间节点**：2022 年完成，至今已稳定运行近两年
     - **当前状态**：在稳定性、性能和避免中心化风险方面表现优异
 
@@ -155,10 +155,10 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
 
 #### 二、关键技术改进方向
 
-1. **单时隙最终确定性(SSF)**
+1. **单时隙最终确定性（SSF）**
 
     **当前问题**
-    - 需要 2-3 个 epoch (约 15 分钟) 完成区块最终确定（等太久）
+    - 需要 2-3 个 epoch （约 15 分钟） 完成区块最终确定（等太久）
     - 32 ETH 的质押门槛限制了验证者参与（太贵了）
 
     **解决方案对比**
@@ -202,12 +202,12 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
     | 方案 | 平均确认时间 | 最坏情况 | 实现难度 |
     |------|--------------|----------|----------|
     | 缩短时隙 | 显著改善 | 仍受限于网络延迟 | 高 |
-    | 预确认 | 0.5 秒(理想) | 12 秒(提议者离线) | 中 |
+    | 预确认 | 0.5 秒（理想） | 12 秒（提议者离线） | 中 |
 
 ### 三、其他重要研究领域
 
 1. **51% 攻击恢复机制**
-    - **现状**：依赖社会共识(少数派软分叉)
+    - **现状**：依赖社会共识（少数派软分叉）
     - **改进方向**：自动化恢复流程
         - 客户端自动检测长期被审查交易
         - 拒绝接受恶意链为有效链
@@ -215,7 +215,7 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
 2. **投票阈值提升**
     - **当前**：67% 质押者支持即最终确定
     - **提案**：提升至 80% 阈值
-        - 减少"错误方获胜"情况
+        - 减少「错误方获胜」情况
         - 增强独立质押者话语权
 
 3. **抗量子攻击**
@@ -227,11 +227,11 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
 ### 四、技术实现路径分析
 
 1. **单时隙最终性实现路线**
-    [![1.png](https://i.postimg.cc/Y96v2wzK/1.png)](https://postimg.cc/gX0z4Q7N)
+    [![1.png]（https://i.postimg.cc/Y96v2wzK/1.png）]（https://postimg.cc/gX0z4Q7N）
 2. **关键研究链接**
-    1. [单时隙最终确定性路径](https://notes.ethereum.org/@vbuterin/single_slot_finality)
-    2. [Orbit SSF 提案](https://ethresear.ch/t/orbit-ssf-solo-staking-friendly-validator-set-management-for-ssf/19928)
-    3. [Whisk SSLE 协议](https://ethresear.ch/t/whisk-a-practical-shuffle-based-ssle-protocol-for-ethereum/11763)
+    1. [单时隙最终确定性路径]（https://notes.ethereum.org/@vbuterin/single_slot_finality）
+    2. [Orbit SSF 提案]（https://ethresear.ch/t/orbit-ssf-solo-staking-friendly-validator-set-management-for-ssf/19928）
+    3. [Whisk SSLE 协议]（https://ethresear.ch/t/whisk-a-practical-shuffle-based-ssle-protocol-for-ethereum/11763）
 
 ### 五、为什么这些很重要？
 
@@ -258,4 +258,122 @@ Geth 教程：[https://geth.ethereum.org/docs/getting-started](https://geth.ethe
 - 2025 年：可能实现 1 ETH 就能质押
 - 2030 年：防御量子计算机攻击
 
+
+## 2025.06.18
+
+### 以太坊协议 The Surge 学习笔记
+
+### 一、基础概念理解
+
+#### 1. 什么是以太坊的「The Surge」？
+「The Surge」是以太坊 2023 年路线图中的重要部分，主要关注 **可扩展性（scalability）** 的提升。简单来说，就是让以太坊网络能够处理更多的交易，同时保持去中心化和安全性。
+
+
+
+#### 2. 为什么需要扩展？
+目前以太坊主网（L1）每秒只能处理约 15-30 笔交易，当网络拥堵时，交易费用（Gas费）会变得很高。The Surge 的目标是实现 **L1 + L2 上 100,000+ 的 TPS**（每秒交易数）。
+
+### 二、 核心扩展策略
+
+#### 1. 以 Rollup 为中心的路线图
+以太坊采用「分层」架构：
+- **L1（主网）**：保持去中心化和安全性
+- **L2（二层网络）**：负责扩展，处理大量交易
+
+这种分工类似于：
+- 法院系统（L1）保护契约和产权
+- 企业家（L2）在坚固基础上构建创新应用
+
+#### 2. 可扩展性三难困境
+这是一个重要概念，指区块链难以同时实现三个理想属性：
+- **去中心化**：运行节点的成本低
+- **可扩展性**：处理高交易量的能力
+- **安全性**：攻击成本高
+
+### 三、关键技术方案
+
+#### 1. 数据可用性采样（DAS）
+**解决的问题**：验证大量数据而不需要下载全部数据
+
+**当前状态**：
+- 每个时隙（12秒）有 3 个约 125kB 的「blob」
+- 最大 TPS 约 173.6（仅 blob）或 607（加上 calldata）
+
+**未来目标**：
+- 通过 PeerDAS 将 blob 数量增加到 8-16 个
+- 中期目标：每时隙 16 MB，约 58,000 TPS
+
+#### 2. 数据压缩
+**为什么需要**：减少每笔交易在链上占用的空间
+
+**优化方法**：
+1. 零字节压缩
+2. 签名聚合（从 ECDSA 迁移到 BLS）
+3. 地址指针替换（用 4 字节代替 20 字节地址）
+4. 交易金额自定义序列化
+
+#### 3. Plasma 架构
+**与 Rollup 的区别**：
+- Rollup：将完整区块数据上链
+- Plasma：只在链上记录区块 Merkle 根
+
+**优势**：
+- 更高的扩展性
+- 用户即使数据不可用也能提取资产
+
+#### 4. L2 证明系统成熟化
+**当前问题**：大多数 Rollup 尚未完全无信任
+
+**发展阶段**：
+- 阶段 0：中心化或基于信任的验证
+- 阶段 1：无信任证明机制 + 安全委员会
+- 阶段 2：完全无信任证明机制（目标）
+
+
+
+### 四、跨 L2 互操作性改进
+
+#### 1. 当前问题
+不同 L2 间切换困难，用户体验差
+
+#### 2. 解决方案方向
+1. **链特定地址**：地址包含链标识
+2. **链特定支付请求**：标准化跨链支付请求
+3. **跨链兑换与 gas 支付**：标准化协议
+4. **轻客户端**：直接验证交互的链
+5. **密钥库钱包**：密钥集中管理
+
+### 五、L1 上的扩展执行
+
+#### 1。 为什么需要扩展 L1？
+即使 L2 很成功，L1 仍需保持足够能力：
+- 维护 ETH 资产价值
+- 支持 L2 故障恢复
+- 保持与 L2 生态的紧密联系
+
+#### 2. 扩展策略
+1. **直接增加 gas 上限**：需配合验证技术改进
+2. **优化特定功能**：
+   - EOF 新字节码格式
+   - 多维 gas 定价
+   - 降低特定操作码成本
+3. **原生 Rollup**：协议内建并行 EVM
+
+### 六、关键学习要点
+
+1. 以太坊采用分层扩展策略，L1 保持安全，L2 负责扩展
+2. 数据可用性采样是扩展的基础技术
+3. Plasma 和 Rollup 是两种主要扩展方案，各有优劣
+4. L2 需要逐步实现完全无信任的证明机制
+5. 跨链互操作性是提升用户体验的关键
+6. L1 自身也需要持续扩展
+
+### 七、未来展望
+
+The Surge 路线图的实现将使以太坊能够支持大规模应用，如：
+- 消费支付
+- 去中心化社交网络
+- 高吞吐量 DApps
+
+同时保持以太坊核心的去中心化和安全特性。
 <!-- Content_END -->
