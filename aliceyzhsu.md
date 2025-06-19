@@ -19,6 +19,7 @@ timezone: UTC+8
 <!-- Content_START -->
 
 ### 2025.06.16
+---
 #### 📗Basic
 - 2014年测试网上线，2015年主网上线
 - $1\ eth = 10^{18}\ Wei = 10^9\ Gwei$
@@ -68,6 +69,7 @@ timezone: UTC+8
 > END_OF_TODAY [BOOKMARK](https://epf.wiki/#/wiki/CL/overview?id=blobs)
 
 ### 2025.06.17
+---
 #### 📗Consensus
 **Blobs**：[EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) 引入，是Cancun硬分叉的一部分。允许每个区块携带3-6个 Blob sidecars，相当于为网络添加了一个数据层 (*data accessibility layer*)
 - 每个Blob的保留期限是 4096 epochs，过期即会drop掉
@@ -103,6 +105,7 @@ timezone: UTC+8
 > <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/cl-architecture)
 
 ### 2025.06.18
+---
 #### 📗Consensus Layer
 - LMD GHOST 提供 liveness，Casper FFG 提供 finality
 > In essence, LMD GHOST keeps the chain moving forward, while Casper FFG ensures stability by finalizing blocks.
@@ -132,5 +135,52 @@ timezone: UTC+8
 	- Validator Client: 进行 attest 和 propose 新区块（validator client时 consensus client的一种可选的附加组件）
 
 > <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/cl-clients)
+
+### 2025.06.19
+---
+目前的CL Client种类
+
+|Client|Language|Developer|Status|
+|---|---|---|---|
+|[Lighthouse](https://github.com/sigp/lighthouse)|Rust|Sigma Prime|Production|
+|[Lodestar](https://github.com/ChainSafe/lodestar)|TypeScript|ChainSafe|Production|
+|[Nimbus](https://github.com/status-im/nimbus-eth2)|Nim|Status|Production|
+|[Prysm](https://github.com/prysmaticlabs/prysm)|Go|Prysmatic Labs|Production|
+|[Teku](https://github.com/ConsenSys/teku)|Java|ConsenSys|Production|
+|[Grandine](https://github.com/grandinetech/grandine)|Rust|Grandine Developers|Production|
+|[Caplin](https://github.com/ledgerwatch/erigon)|Go|Erigon|Development|
+|[LambdaClass](https://github.com/lambdaclass/lambda_ethereum_consensus)|Elixir|LambdaClass|Development|
+
+客户端种类的**多样性**对一个网络的安全和鲁棒至关重要，因为单一客户端有出现问题的可能，如果网络中2/3的节点使用单一客户端，一旦该客户端软件出问题，网络就会崩溃。目前最主流的是 Lighthouse 和 Prysm
+
+#### 📗SSZ
+SSZ (Simple SerialiZation): 是专为以太坊设计的 1. 序列化 和 2. Merkleization 方案
+
+- 为什么要序列化：将数据结构或对象转换为**可存储或可传输格式**，以便 
+	1. 数据持久化 
+	2. 网络传输
+	3. 跨语言/平台兼容：为跨实现的节点（不同语言）提供统一通信格式
+	4. 存储与效率优化：原始对象可能包含很多冗余信息，序列化可以压缩为精简格式，节省空间
+	5. 哈希和签名：数据序列化为字节后，便于进行哈希、加密、签名等操作
+- 无符号整数编码：Little-Endian Formt，低位byte排在地址前面（最低位），如`0x12345678` 编码为 `[0x78, 0x56, 0x34, 0x12]`
+```python
+class Example
+    id: uint64,
+    bytes: List[uint8, 64]
+    next: uint64
+```
+```
+# serialize(my_example)
+#
+# Note: this is a single byte-array split over four lines for readability.
+[
+  42, 0, 0, 0,  # The little-endian encoding of `id`, 42.
+  12, 0, 0, 0,  # The "offset" that indicates where the variable-length value of `bytes` starts (little-endian 12).
+  43, 0, 0, 0,  # The little-endian encoding of `next`, 43.
+  0, 1, 2       # The value of the `bytes` field.
+]
+```
+
+> <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/SSZ)
 
 <!-- Content_END -->
