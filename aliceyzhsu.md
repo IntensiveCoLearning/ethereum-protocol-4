@@ -5,7 +5,7 @@ timezone: UTC+8
 > 请在上边的 timezone 添加你的当地时区(UTC)，这会有助于你的打卡状态的自动化更新，如果没有添加，默认为北京时间 UTC+8 时区
 
 
-# 你的名字
+# Rhyne Hsu
 
 1. 自我介绍
    - [Rhyne Hsu](https://www.linkedin.com/in/yuanzhen-hsu) / [Sasaki](https://x.com/AntiSasaki)，一个兴趣使然的web3爱好者，希望把自己的技术锻炼得更solid！
@@ -103,5 +103,34 @@ timezone: UTC+8
 > <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/cl-architecture)
 
 ### 2025.06.18
+#### 📗Consensus Layer
+- LMD GHOST 提供 liveness，Casper FFG 提供 finality
+> In essence, LMD GHOST keeps the chain moving forward, while Casper FFG ensures stability by finalizing blocks.
+
+- **CAP Theorem**：一个分布式系统不可能同时满足 Consistency, Availability, Partition tolerance
+- 一个新区块是如何产生的
+	1. 当前slot的block proposer的EL client执行`create block`指令
+	2. EL获取mempool中的交易
+	3. EL打包交易并执行，生成新区块的hash
+	4. CL客户端将交易集合和区块hash放入beacon block（CL的区块），并在网络中广播
+	5. 其他validator收到广播区块
+	6. 将交易作为 *execution payload* 发送到EL，执行交易并生成hash
+	7. 验证hash后，将该区块添加到CL中，完成见证（attest）并广播 *attestation*
+- 一个新区块的心路历程：proposed -> attested -> justified -> finalized
+- Consensus Client的技术栈
+	- libp2p：p2p协议
+	- discv5：peer discovery
+	- libp2p-noise：加密
+	- [SSZ](https://ethereum.org/en/developers/docs/data-structures-and-encoding/ssz/) (Simple SerialiZe)：取代了 RLP的新的编码/序列化算法
+	> [RLP](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/) (Recursive-Length Prefix)：曾是以太坊EL的序列化算法
+
+	- (snappy)[https://en.wikipedia.org/wiki/Snappy_(compression)]：压缩算法，保证合理的压缩比的前提下优先压缩/解压速度
+- 共识层规范 Consensus Layer *Specification*：[Pyspec](https://github.com/ethereum/consensus-specs) 是为共识层开发者提供的执行规范
+- Clients
+	- Consensus Client: 运行以太坊PoS共识算法
+	- Execution Client: 参与交易的验证和广播，执行状态转移
+	- Validator Client: 进行 attest 和 propose 新区块（validator client时 consensus client的一种可选的附加组件）
+
+> <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/cl-clients)
 
 <!-- Content_END -->

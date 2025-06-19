@@ -18,12 +18,11 @@ timezone: UTC+8
 
 ### 2025.06.17
 
-
-
 阅读[《Geth 源码系列 I：Geth 整体架构》](https://forum.lxdao.io/t/geth-i-geth/2856)
 
-test
+### 2025.06.18
 
+阅读[《Geth 源码系列 II：存储设计及实现》](https://forum.lxdao.io/t/geth-ii/2857)
 
 
 ### 2025.07.12

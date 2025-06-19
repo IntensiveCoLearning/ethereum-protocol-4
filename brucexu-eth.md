@@ -298,4 +298,51 @@ TODO Based preconfirmations https://ethresear.ch/t/based-preconfirmations/17353
 
 TODO APS https://www.ephema.io/blog/beyond-the-stars-an-introduction-to-execution-tickets-on-ethereum
 
+TODO 整理以太坊面临的量子算法危机和解决方法
+
+# 2025.06.19
+
+## https://vitalik.eth.limo/general/2024/10/17/futures2.html
+
+最开始提出了两种扩容方案：
+
+- 分片
+  - 每个 node 就负责一小部分，而不是全部的 txs
+  - peerDAS 完成 full rollup scaling
+- L2
+  - 将大部分数据和计算放在别的地方，但是关键信息存储在 L1 上面
+  - 从 state channels 到 plasma 再到 rollups 有不同的方案演进
+  - 20 年提出 [A rollup-centric ethereum roadmap](https://ethereum-magicians.org/t/a-rollup-centric-ethereum-roadmap/4698)
+  - L2 interop
+  - blob 扩容
+  - 先是 op rollup 然后是 zk rollup
+
+这套战略在 2025 年反思的话：
+
+1. 分片进展太慢，不过正在加速，预计今年上线
+2. L2 生态崛起，但是比较分散，没有形成合力，interop 也很难实现，不是一个单纯的技术问题，导致 Solana 这样的竞争对手对 ETH Mainnet 造成沉重打击。然后 L2 的收益也没有很好的回流 ETH，模块化之后，还非常容易更换 DA 到其他项目。L2 的募资也占用了大量的资金和资源，结果被掏空或者创始团队拿走了，然后就是一堆同质化的东西。
+
+The Surge 的目标：
+
+- 10w TPS on L1 L2
+- 有一些 L2s 有 ETH 的核心属性
+- L2 interoperability，ETH 感觉像是一个 ecosystem
+
+不可能三角：
+
+- 去中心化：要求有很多 node，运行成本低
+- 安全：要求有足够高的攻击成本
+- 可扩展性：要求有足够多的 txs
+
+解决方案需要跳出对这个三个属性的拉扯和取舍，而是从更高层面或者外部进行创新性的方案设计：
+
+- DAS + SNARK
+
+  - SNARK 轻量的就可以运算验证数据正确，降低 node 运行难度
+  - DAS 每个客户端下载和保存一部分数据，降低 node size
+    - [few-of-N trust model](https://vitalik.eth.limo/general/2020/08/20/trust.html) 保证了核心安全属性
+  - 这样实现 node 轻量化，安全性足够，扩展性高
+
+- Plasma
+
 <!-- Content_END -->
