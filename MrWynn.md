@@ -606,4 +606,8 @@ type Storage map[common.Hash]common.Hash
 
 对于变长数组和 Map 结构的变量存储分配则相对的复杂。虽然 Map 本身就是 `key-value` 的结构，但是在 Storage 层并不直接使用 map 中 key 的值或者 key 的值的 sha3 哈希值来作为 Storage 分配的 Slot 的索引值。目前，EVM 首先会使用map中元素的key的值和当前Map变量声明位置对应的 slot 的值进行拼接，再使用拼接后的值的 `keccak256` 哈希值作为 Slot 的位置索引(Position)。
 
+### 2025.06.19
+
+学习MPT树的结构，但还没完全看懂，只是知道了个大概，明天继续研究。
+
 <!-- Content_END -->
