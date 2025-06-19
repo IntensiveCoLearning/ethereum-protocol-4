@@ -28,6 +28,7 @@ https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/EthereumClientArchite
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/GethArchitecture.md
 
 ### 2025.06.19
+https://github.com/Bo-00/Ethereum-Protocol-Study/tree/main/private-ethereum-network
 
 ### 2025.06.20
 
