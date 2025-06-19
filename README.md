@@ -163,10 +163,11 @@ Passcode: 955074
 | [fffuuuming](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/fffuuuming.md) | ✅ | ✅ | ✅ |   | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [qingoba](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/qingoba.md) | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | | | |
 | [kuove](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/kuove.md) | ✅ | ✅ | ✅ |   | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
-| [big-dudu-mosty](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/big-dudu-mosty.md) | ✅ | ⭕️ | ✅ |   | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [big-dudu-mosty](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/big-dudu-mosty.md) | ✅ | ⭕️ | ✅ | ✅ | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [Bo](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Bo.md) | ✅ | ✅ | ✅ |   | | | | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [0xAlexWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/0xAlexWu.md) | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | | | |
 <!-- END_COMMIT_TABLE -->
+
 
 
 
