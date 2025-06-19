@@ -154,5 +154,24 @@ Note that only validators assigned to a slot cast LMD GHOST votes, while all val
 - **Supermajority**: ⅔ of the total validator balance
 - **justified**: Once a checkpoint receives a supermajority
 - **finalized**: the subsequent epoch's checkpoint also achieves justification
+### 2025.06.19
+[Execution Layer Specification](https://epf.wiki/#/wiki/EL/el-specs?id=execution-layer-specification)
+---
+EL focus on executing the **state transition function** (STF) with two questions:
+- Is it possible to append the block to the end of the blockchain?
+- How does the state change as a result?
 
+Simplified Overview:
+![截圖 2025-06-15 晚上9.30.42](https://hackmd.io/_uploads/SkaMsH2mee.png)
+$$\sigma_{t+1} \equiv \Pi(\sigma_t, B)$$
+- $B$ : **current [block](https://github.com/ethereum/execution-specs/blob/0f9e4345b60d36c23fffaa69f70cf9cdb975f4ba/src/ethereum/shanghai/fork_types.py#L217)** that is being sent to the execution layer for processing.
+- $\sigma_t$ , $\sigma_{t+1}$: **state of the [blockchain](https://github.com/ethereum/execution-specs/blob/0f9e4345b60d36c23fffaa69f70cf9cdb975f4ba/src/ethereum/shanghai/fork.py#L73)** before / after applying the current block
+- $\Pi$ : [block level state transition function](https://github.com/ethereum/execution-specs/blob/0f9e4345b60d36c23fffaa69f70cf9cdb975f4ba/src/ethereum/shanghai/fork.py#L145)
+
+前情提要：**collapse function**: an operation that reduces world state into a single hash, to store in the block header
+- Takes a set of account/storage entries.
+- Builds a Merkle Patricia Trie (MPT)
+- Computes the root hash, e.g., `stateRoot`
+
+預計之後會先轉往 Geth 的架構及實現閱讀
 <!-- Content_END -->
