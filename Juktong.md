@@ -54,7 +54,24 @@ Note:
 
 What is Single Slot Finality?
 
-While finality is a crypto-economic terms pointing to the iead that the blockchain is economically costly to alter, SSF refers to that blocks getting proposed and finalized in the same slot. 
+While finality is a crypto-economic terms pointing to the iead that the blockchain is economically costly to alter, SSF refers to that blocks getting proposed and finalized in the same slot.
+
+### 2025.06.18
+The Surge refers to a phase in Ethereum's development roadmap focused on scaling the network to handle a massive number of transactions per second (TPS), while maintaining decentralization and security.
+
+Vitalik also discusses the scalability trilemma, which highlights the difficulty of simultaneously achieving decentralization, scalability, and security. This was long considered a hard tradeoff, but recent innovations like SNARKs and data availability sampling (DAS) have made significant progress in addressing it.
+
+In summary, DAS allows nodes to verify that data is available without downloading all of it, data compression reduces the space each transaction takes on-chain, and Plasma improves scalability by posting only Merkle roots of its state to Ethereum, greatly reducing data requirements.
+
+Also, Ethereum wants the L2 ecosystem to feel like one unified chain, not many separate blockchains. Solutions include chain-specific addresses, shared bridges, and standardized cross-chain transactions.
+
+Note:
+
+State channel: A small group of participants stake ETH on smart contract and only the final state is being recorded on level 1 chain, allowing extreme low fee but fixed within a fixed group of people and limited flexibility.
+
+Plasma: running a separate blockchain (a “child chain”) and post only periodic summaries of its state to Ethereum.
+
+Rollups: bundling large numbers of transactions and submit either fraud proofs or validity proofs to Ethereumsupport complex smart contracts and enable a wide range of decentralized applications.
 
 ### 2025.07.12
 
