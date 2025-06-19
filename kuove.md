@@ -185,7 +185,114 @@ go-ethereum 的代码结构很庞大，但其中很多代码属于辅助代码�
     signer：交易签名管理（硬件钱包集成）
     tests：集成测试和状态测试，验证协议兼容性
     trie & triedb：默克尔帕特里夏树（Merkle Patricia Trie）的实现，用于高效存储和管理账户状态、合约存储
+### 2025.06.19
+#### 执行层模块划分
+外部访问 Geth 节点有两种形式，一种是通过 RPC，另外一种是通过 Console。
+RPC 适合开放给外部的用户来使用，Console 适合节点的管理者使用。但无论是通过 RPC 还是 Console，都是使用内部已经封装好的能力，这些能力通过分层的方式来构建。
+
+最外层是 API 用于外部访问节点的各项能力，
+Engine API 用于执行层和共识层之间的通信，Eth API 用于外部用户或者程序发送交易，获取区块信息，Net API 用于获取 p2p 网络的状态等等。 
+比如用户通过 API 发送了一个交易，那么这个交易最终会被提交到交易池中，通过交易池来管理，再比如用户需要获取一个区块数据，那么就需要调用数据库的能力去获取对应的区块。
+
+在 API 的下一层就核心功能的实现，包括交易池、交易打包、产出区块、区块和状态的同步等等。
+这些功能再往下就需要依赖更底层的能力，比如交易池、区块和状态的同步需要依赖 p2p 网络的能力，区块的产生以及从其他节点同步过来的区块需要被验证才能写入到本地的数据库，这些就需要依赖 EVM 和数据存储的能力。
+![执行层模块划分](https://forum.lxdao.io/uploads/default/original/2X/a/ae1f53f220db394aab7d2304bda57a6634b57bb4.png)
+
+#### 执行层核心数据结构
+##### Ethereum
+在 eth/backend.go 中的 Ethereum 结构是整个以太坊协议的抽象，基本包括了以太坊中的主要组件，但 EVM 是一个例外，它会在每次处理交易的时候实例化，不需要随着整个节点初始化，下文中的 Ethereum 都是指这个结构体：
+
+```
+
+type Ethereum struct {
+// 以太坊配置，包括链配置
+    config         *ethconfig.Config
+    // 交易池，用户的交易提交之后先到交易池
+    txPool         *txpool.TxPool
+    // 用于跟踪和管理本地交易（local transactions）
+    localTxTracker *locals.TxTracker
+    // 区块链结构
+    blockchain     *core.BlockChain
+
+// 是以太坊节点的网络层核心组件，负责处理所有与其他节点的通信，包括区块同步、交易广播和接收，以及管理对等节点连接
+    handler *handler
+    // 负责节点发现和节点源管理
+    discmix *enode.FairMix
+
+    // 负责区块链数据的持久化存储
+    chainDb ethdb.Database
+// 负责处理各种内部事件的发布和订阅
+    eventMux       *event.TypeMux
+    // 共识引擎
+    engine         consensus.Engine
+    // 管理用户账户和密钥
+    accountManager *accounts.Manager
+
+// 管理日志过滤器和区块过滤器
+    filterMaps      *filtermaps.FilterMaps
+    // 用于安全关闭 filterMaps 的通道，确保在节点关闭时正确清理资源
+    closeFilterMaps chan chan struct{}
+
+// 为 RPC API 提供后端支持
+    APIBackend *EthAPIBackend
+
+// 在 PoS 下，与共识引擎协作验证区块
+    miner    *miner.Miner
+    // 节点接受的最低gas价格
+    gasPrice *big.Int
+// 网络 ID
+    networkID     uint64
+    // 提供网络相关的 RPC 服务，允许通过 RPC 查询网络状态
+    netRPCService *ethapi.NetAPI
+
+// 管理P2P网络连接，处理节点发现和连接建立并提供底层网络传输功能
+    p2pServer *p2p.Server
+
+// 保护可变字段的并发访问
+    lock sync.RWMutex 
+    // 跟踪节点是否正常关闭，在异常关闭后帮助恢复
+    shutdownTracker *shutdowncheck.ShutdownTracker 
+}
+
+```
+
+##### Node
+
+在 node/node.go 中的 Node 是另一个核心的数据结构，它作为一个容器，负责管理和协调各种服务的运行。
+在下面的结构中，需要关注一下 lifecycles 字段，Lifecycle 用来管理内部功能的生命周期。比如上面的 Ethereum 抽象就需要依赖 Node 才能启动，并且在 lifecycles 中注册。这样可以将具体的功能与节点的抽象分离，提升整个架构的扩展性，这个 Node 需要与 devp2p 中的 Node 区分开。
 
 
+```
+type Node struct {
+	eventmux      *event.TypeMux
+	config        *Config
+	// 账户管理器，负责管理钱包和账户
+	accman        *accounts.Manager
+	log           log.Logger
+	keyDir        string        
+	keyDirTemp    bool          
+	dirLock       *flock.Flock  
+	stop          chan struct{}
+	// p2p 网络实例 
+	server        *p2p.Server   
+	startStopLock sync.Mutex
+	// 跟踪节点生命周期状态（初始化、运行中、已关闭）    
+	state         int           
+
+	lock          sync.Mutex
+	// 所有注册的后端、服务和辅助服务
+	lifecycles    []Lifecycle
+	// 当前提供的 API 列表 
+	rpcAPIs       []rpc.API
+	// 为 RPC 提供的不同访问方式   
+	http          *httpServer 
+	ws            *httpServer 
+	httpAuth      *httpServer 
+	wsAuth        *httpServer 
+	ipc           *ipcServer  
+	inprocHandler *rpc.Server 
+	databases map[*closeTrackingDB]struct{} 
+}
+```
 
 <!-- Content_END -->
