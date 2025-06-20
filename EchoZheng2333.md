@@ -444,4 +444,23 @@ The Surge 路线图的实现将使以太坊能够支持大规模应用，如：
 **延伸阅读**：  
 - [以太坊基金会](https://ethereum.org) | [R&D Discord](https://discord.gg/ethereum)  
 - 相关会议记录将发布于 [ethereum/pm GitHub](https://github.com/ethereum/pm)。
+
+## 2025.6.20
+
+复习：https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293546&idx=1&sn=4170dca0fac69556c3e46539867bfeb7&scene=21#wechat_redirect
+粗略阅读：https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293588&idx=1&sn=c9ef3a890934cbbc9a4a6f78407aef03&scene=21&poc_token=HI08VWijAuA_s6L9LhUoc4-991C418FiI0HrQTgy
+
+### 修正区块构建流程
+
+1. 要解决什么问题？
+    
+    目前，主要通过额外的提议者-构建者协议（MEVBoost）来完成。当验证者有机会提出区块时，他们会将选择区块内容的任务拍卖给称为构建者的专业参与者。
+    
+    选择能将收入最大化的区块内容的任务非常依赖规模经济：需要专门的算法来确定应包括哪些交易，以便从链上金融工具和用户的相关交易中提取尽可能多的价值（这就是所谓的“MEV 提取”）。验证者则只需承担相对规模经济较小的"dumb pipe" 任务，即监听出价并接受最高出价，同时也需履行其他职责，比如验证。
+
+### 修正质押经济学
+
+### 应用层解决方案
+
+
 <!-- Content_END -->
