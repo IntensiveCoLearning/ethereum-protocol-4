@@ -294,5 +294,190 @@ type Node struct {
 	databases map[*closeTrackingDB]struct{} 
 }
 ```
+### 2025.06.20
+如果以一个抽象的维度来看以太坊的执行层，以太坊作为一台世界计算机，需要包括三个部分，网络、计算和存储，那么以太坊执行层中与这三个部分相对应的组件是：
 
+    网络：devp2p
+    计算：EVM
+    存储：ethdb
+#### devp2p
+以太坊本质还是一个分布式系统，每个节点通过 p2p 网络与其他节点相连。以太坊中的 p2p 网络协议的实现就是 devp2p。
+
+devp2p 有两个核心功能，
+一个是节点发现，让节点在接入网络时能够与其他节点建立联系；
+另一个是数据传输服务，在与其他节点建立联系之后，就可以想换交换数据。
+
+在 p2p/enode/node.go 中的 Node 结构代表了 p2p 网络中一个节点，其中 enr.Record 结构中存储了节点详细信息的键值对，包括身份信息（节点身份所使用的签名算法、公钥）、网络信息（IP 地址，端口号）、支持的协议信息（比如支持 eth/68 和 snap 协议）和其他的自定义信息，这些信息通过 RLP 的方式编码，具体的规范在 eip-778 中定义：
+
+```
+type Node struct {
+    // 节点记录，包含节点的各种属性
+    r  enr.Record
+    // 节点的唯一标识符，32字节长度  
+    id ID          
+
+    // hostname 跟踪节点的DNS名称
+    hostname string
+
+    // 节点的IP地址
+    ip  netip.Addr
+    // UDP端口  
+    udp uint16     
+    // TCP端口 
+    tcp uint16      
+}
+
+// enr.Record
+type Record struct {
+    // 序列号
+    seq       uint64       
+    // 签名
+    signature []byte       
+    // RLP 编码后的记录
+    raw       []byte       
+    // 所有键值对的排序列表
+    pairs     []pair       
+}
+```
+在 p2p/discover/table.go 中的 Table 结构是 devp2p 实现节点发现协议的核心数据结构，它实现了类似 Kademlia 的分布式哈希表，用于维护和管理网络中的节点信息。
+
+```
+type Table struct {
+	mutex        sync.Mutex
+	// 按距离索引已知节点        
+	buckets      [nBuckets]*bucket
+	// 引导节点 
+	nursery      []*enode.Node     
+	rand         reseedingRandom   
+	ips          netutil.DistinctNetSet
+	revalidation tableRevalidation
+  
+  // 已知节点的数据库
+	db  *enode.DB 
+	net transport
+	cfg Config
+	log log.Logger
+
+	// 周期性的处理网络中的各种事件
+	refreshReq      chan chan struct{}
+	revalResponseCh chan revalidationResponse
+	addNodeCh       chan addNodeOp
+	addNodeHandled  chan bool
+	trackRequestCh  chan trackRequestOp
+	initDone        chan struct{}
+	closeReq        chan struct{}
+	closed          chan struct{}
+
+  // 增加和移除节点的接口
+	nodeAddedHook   func(*bucket, *tableNode)
+	nodeRemovedHook func(*bucket, *tableNode)
+}
+```
+
+#### ethdb
+ethdb 完成以太坊数据存储的抽象，提供统一的存储接口，底层具体的数据库可以是 leveldb，也可以是 pebble 或者其他的数据库。可以有很多的扩展，只要在接口层面保持统一。
+
+有些数据（如区块数据）可以通过 ethdb 接口直接对底层数据库进行读写，其他的数据存储接口都是建立的 ethdb 的基础上，比如数据库有很大部分的数据是状态数据，这些数据会被组织成 MPT 结构，在 Geth 中对应的实现是 trie，在节点运行的过程中，trie 数据会产生很多中间状态，这些数据不能直接调用 ethdb 进行读写，需要 triedb 来管理这些数据和中间状态，最后才通过 ethdb 来持久化。
+
+在 ethdb/database.go 中定义底层数据库的读写能力的接口，但没有包括具体的实现，具体的实现将由不同的数据库自身来实现。比如 leveldb 或者 pebble 数据库。在 Database 中定义了两层数据读写的接口，其中 KeyValueStore 接口用于存储活跃的、可能频繁变化的数据，如最新的区块、状态等。AncientStore 则用于处理历史区块数据，这些数据一旦写入就很少改变。
+
+```
+// 数据库的顶层接口
+type Database interface {
+    KeyValueStore
+    AncientStore
+}
+
+// KV 数据的读写接口
+type KeyValueStore interface {
+	KeyValueReader
+	KeyValueWriter
+	KeyValueStater
+	KeyValueRangeDeleter
+	Batcher
+	Iteratee
+	Compacter
+	io.Closer
+}
+
+// 处理老数据的读写的接口
+type AncientStore interface {
+	AncientReader
+	AncientWriter
+	AncientStater
+	io.Closer
+}
+```
+
+#### EVM
+
+EVM 是以太坊这个状态机的状态转换函数，所有状态数据的更新都只能通过 EVM 来进行，p2p 网络可以接受到交易和区块信息，这些信息被 EVM 处理之后会成为状态数据库的一部分。EVM 屏蔽了底层硬件的不同，让程序在不同平台的 EVM 上执行都能得到一致的结果。这是一种很成熟的设计方式，Java 语言中 JVM 也是类似的设计。
+
+EVM 的实现有三个主要的组件，core/vm/evm.go 中的 EVM 结构体定义了 EVM 的总体结构及依赖，包括执行上下文，状态数据库依赖等等； core/vm/interpreter.go 中的 EVMInterpreter 结构体定义了解释器的实现，负责执行 EVM 字节码；core/vm/contract.go 中的 Contract 结构体封装合约调用的具体参数，包括调用者、合约代码、输入等等，并且在 core/vm/opcodes.go 中定义了当前所有的操作码：
+
+```
+// EVM
+type EVM struct {
+    // 区块上下文，包含区块相关信息
+    Context BlockContext
+    // 交易上下文，包含交易相关信息     
+    TxContext
+    // 状态数据库，用于访问和修改账户状态               
+    StateDB StateDB
+    // 当前调用深度         
+    depth int
+    // 链配置参数               
+    chainConfig *params.ChainConfig  
+    chainRules params.Rules
+    // EVM配置          
+    Config Config
+    // 字节码解释器                    
+    interpreter *EVMInterpreter
+    // 中止执行的标志      
+    abort atomic.Bool                
+    callGasTemp uint64
+    // 预编译合约映射               
+    precompiles map[common.Address]PrecompiledContract  
+    jumpDests map[common.Hash]bitvec  
+}
+
+type EVMInterpreter struct {
+    // 指向所属的EVM实例
+    evm   *EVM
+    // 操作码跳转表               
+    table *JumpTable         
+    // Keccak256哈希器实例，在操作码间共享
+    hasher    crypto.KeccakState
+    // Keccak256哈希结果缓冲区  
+    hasherBuf common.Hash         
+    // 是否为只读模式，只读模式下不允许状态修改
+    readOnly   bool
+    // 上一次CALL的返回数据，用于后续重用          
+    returnData []byte        
+}
+
+type Contract struct {
+    // 调用者地址
+    caller  common.Address
+    // 合约地址   
+    address common.Address   
+
+    jumpdests map[common.Hash]bitvec  
+    analysis  bitvec                  
+    // 合约字节码
+    Code     []byte
+    // 代码哈希          
+    CodeHash common.Hash
+    // 调用输入     
+    Input    []byte          
+    // 是否为合约部署
+    IsDeployment bool
+    // 是否为系统调用        
+    IsSystemCall bool        
+    // 可用gas量
+    Gas   uint64
+    // 调用附带的 ETH 数量             
+    value *uint256.Int       
+}
+```
 <!-- Content_END -->
