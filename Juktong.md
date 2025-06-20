@@ -54,8 +54,40 @@ Note:
 
 What is Single Slot Finality?
 
-While finality is a crypto-economic terms pointing to the iead that the blockchain is economically costly to alter, SSF refers to that blocks getting proposed and finalized in the same slot. 
+While finality is a crypto-economic terms pointing to the iead that the blockchain is economically costly to alter, SSF refers to that blocks getting proposed and finalized in the same slot.
 
-### 2025.07.12
+### 2025.06.18
+The Surge refers to a phase in Ethereum's development roadmap focused on scaling the network to handle a massive number of transactions per second (TPS), while maintaining decentralization and security.
+
+Vitalik also discusses the scalability trilemma, which highlights the difficulty of simultaneously achieving decentralization, scalability, and security. This was long considered a hard tradeoff, but recent innovations like SNARKs and data availability sampling (DAS) have made significant progress in addressing it.
+
+In summary, DAS allows nodes to verify that data is available without downloading all of it, data compression reduces the space each transaction takes on-chain, and Plasma improves scalability by posting only Merkle roots of its state to Ethereum, greatly reducing data requirements.
+
+Also, Ethereum wants the L2 ecosystem to feel like one unified chain, not many separate blockchains. Solutions include chain-specific addresses, shared bridges, and standardized cross-chain transactions.
+
+Note:
+
+State channel: A small group of participants stake ETH on smart contract and only the final state is being recorded on level 1 chain, allowing extreme low fee but fixed within a fixed group of people and limited flexibility.
+
+Plasma: running a separate blockchain (a “child chain”) and post only periodic summaries of its state to Ethereum.
+
+Rollups: bundling large numbers of transactions and submit either fraud proofs or validity proofs to Ethereumsupport complex smart contracts and enable a wide range of decentralized applications.
+
+### 2025.06.19
+#### The scourge
+
+This passage discusses the current centralization risks in Ethereum caused by PoS and the current block construction mechanism. Specifically, smaller stakers tend to join larger staking pools to maximize MEV (Maximal Extractable Value), which increases efficiency but risks centralization. If two dominant builders control around 80% of blocks and decide to censor transactions, inclusion could be delayed by an average of 9 slots. which would allow market manipulation.
+
+#### Proposed Solutions:
+
+1. FOCIL + APS:
+   - Inclusion lists ensure key transactions can’t be censored.
+   - Attester-Proposer Separation (APS) auctions off block production while proposers ensure inclusion.
+2. BRAID (Multiple Concurrent Proposers):
+   - Distributes the block building task to multiple proposers.
+   - More decentralized but needs encrypted mempools for privacy.
+3. Encrypted Mempools:
+   - Protect user transactions from front-running.
+   - Requires delay encryption or threshold decryption to ensure post-inclusion transparency.
 
 <!-- Content_END -->
