@@ -73,6 +73,21 @@ Plasma: running a separate blockchain (a “child chain”) and post only period
 
 Rollups: bundling large numbers of transactions and submit either fraud proofs or validity proofs to Ethereumsupport complex smart contracts and enable a wide range of decentralized applications.
 
-### 2025.07.12
+### 2025.06.19
+#### The scourge
+
+This passage discusses the current centralization risks in Ethereum caused by PoS and the current block construction mechanism. Specifically, smaller stakers tend to join larger staking pools to maximize MEV (Maximal Extractable Value), which increases efficiency but risks centralization. If two dominant builders control around 80% of blocks and decide to censor transactions, inclusion could be delayed by an average of 9 slots. which would allow market manipulation.
+
+#### Proposed Solutions:
+
+1. FOCIL + APS:
+   - Inclusion lists ensure key transactions can’t be censored.
+   - Attester-Proposer Separation (APS) auctions off block production while proposers ensure inclusion.
+2. BRAID (Multiple Concurrent Proposers):
+   - Distributes the block building task to multiple proposers.
+   - More decentralized but needs encrypted mempools for privacy.
+3. Encrypted Mempools:
+   - Protect user transactions from front-running.
+   - Requires delay encryption or threshold decryption to ensure post-inclusion transparency.
 
 <!-- Content_END -->
