@@ -90,4 +90,18 @@ This passage discusses the current centralization risks in Ethereum caused by Po
    - Protect user transactions from front-running.
    - Requires delay encryption or threshold decryption to ensure post-inclusion transparency.
 
+### 2025.06.21
+#### The Verge
+
+In this passage, Vitalik discusses The Verge, which refers to making full verification of the Ethereum chain computationally affordable for marginal devices. Originally, The Verge focused on restructuring Ethereum's state representation into Verkle Trees, but it has since evolved into a broader goal: enabling efficient, low-cost verification for all users and devices.
+
+There are two main approaches to achieving The Verge's goals: Verkle Trees and STARKed Binary Hash Trees. Verkle Trees are currently the most mature and time-efficient solution. However, they rely on elliptic curve cryptography, which is not considered post-quantum secure. On the other hand, STARKs are post-quantum safe but either suffer from longer proving times (if using conservative hash functions) or lack maturity and widespread trust (if using newer, aggressive hash functions).
+
+| Approach                                     | Proof Size        | Security                    | Prover Time |
+| -------------------------------------------- | ----------------- | --------------------------- | ----------- |
+| Verkle Trees                                 | Data + 0.1–2 MB   | EC-based (not quantum-safe) | <1s         |
+| STARK w/ Conservative Hashes (SHA256, BLAKE) | Data + 100–300 kB | Trusted                     | >10s        |
+| STARK w/ Aggressive Hashes (Poseidon, Ajtai) | Data + 100–300 kB | Less mature                 | 1–2s        |
+
+
 <!-- Content_END -->
