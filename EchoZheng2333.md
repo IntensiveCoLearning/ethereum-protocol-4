@@ -513,4 +513,8 @@ The Surge 路线图的实现将使以太坊能够支持大规模应用，如：
 > - 质押经济模型：[issuance.wtf](https://issuance.wtf/)  
 > - Obol小队质押：[obol.tech](https://www.obol.tech/)
 
+## 2025.06.22
+
+请假
+
 <!-- Content_END -->
