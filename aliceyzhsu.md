@@ -207,4 +207,63 @@ class Example
 
 > <END_OF_TODAY>
 
+### 2025.06.23
+---
+#### 📗Geth
+> 最popular的 EL 客户端</br>
+[source code](https://github.com/ethereum/go-ethereum.git)</br>
+[Geth 源码系列 I：Geth 整体架构](https://forum.lxdao.io/t/geth-i-geth/2856)
+
+执行层的六个部分
+1. EVM：状态机的状态转移函数。负责执行交易，交易执行也是修改状态数的唯一方式
+2. 存储
+3. mempool
+4. p2p网络
+5. RPC服务：提供访问节点的能力，如用户向节点发送请求、CL和EL之间的交互
+6. Blockchain
+
+EL node 的三种可能状态及需要做的事
+1. 新加入网络：需要通过p2p网络获取区块和状态数据
+	- Full Sync：从 genesis block 逐个下载、验证、重建状态数据库
+	- Snap Sync：直接下载最新 checkpoint 的状态数据和以后的区块数据
+2. 已同步到最新状态，非 proposer：
+	- CL 持续通过 Engine API 从共识层获取到当前最新产出的区块
+	- CL client 将交易作为 *execution payload* 发送到EL
+	- EL 执行交易完成状态转移，并生成hash验证区块
+	- 更新状态数据库、本地区块链
+	- 将该区块添加到CL中，完成见证（attest）并广播 *attestation*
+3. 已同步到最新状态，选为 proposer：
+	- CL驱动EL client执行`create block`指令
+	- EL获取mempool中的交易
+	- EL打包交易并执行，生成新区块的hash
+	- CL客户端将交易集合和区块hash放入beacon block（CL的区块），并在网络中广播
+- `eth/backend.go` Ethereum核心抽象
+``` go
+type Ethereum struct {
+	config         *ethconfig.Config  // 以太坊配置，包括链配置
+	txPool         *txpool.TxPool  // 交易池，用户的交易提交之后先到交易池
+	localTxTracker *locals.TxTracker  // 用于跟踪和管理本地交易（local transactions）
+	blockchain     *core.BlockChain  // 区块链结构
+	handler *handler  // 是以太坊节点的网络层核心组件，负责处理所有与其他节点的通信，包括区块同步、交易广播和接收，以及管理对等节点连接
+	discmix *enode.FairMix  // 负责节点发现和节点源管理
+	chainDb ethdb.Database  // 负责区块链数据的持久化存储
+	eventMux       *event.TypeMux  // 负责处理各种内部事件的发布和订阅
+	engine         consensus.Engine  // 共识引擎
+	accountManager *accounts.Manager  // 管理用户账户和密钥
+	filterMaps      *filtermaps.FilterMaps  // 管理日志过滤器和区块过滤器
+	closeFilterMaps chan chan struct{}  // 用于安全关闭 filterMaps 的通道，确保在节点关闭时正确清理资源
+	APIBackend *EthAPIBackend  // 为 RPC API 提供后端支持
+	miner    *miner.Miner  // 在 PoS 下，与共识引擎协作验证区块
+	gasPrice *big.Int  // 节点接受的最低gas价格
+	networkID     uint64  // 网络 ID
+	netRPCService *ethapi.NetAPI  // 提供网络相关的 RPC 服务，允许通过 RPC 查询网络状态
+	p2pServer *p2p.Server  // 管理P2P网络连接，处理节点发现和连接建立并提供底层网络传输功能
+	lock sync.RWMutex  // 保护可变字段的并发访问
+	shutdownTracker *shutdowncheck.ShutdownTracker  // 跟踪节点是否正常关闭，在异常关闭后帮助恢复
+}
+```
+- geth 节点启动入口：`cmd/geth/main.go`
+
+- 实战教程: [goethereumbook](https://goethereumbook.org/en/)
+
 <!-- Content_END -->
