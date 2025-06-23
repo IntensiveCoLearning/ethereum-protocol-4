@@ -152,7 +152,7 @@ Passcode: 955074
 | ------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | [brucexu-eth](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/brucexu-eth.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [aliceyzhsu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/aliceyzhsu.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ |   | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
-| [Juktong](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Juktong.md) | ⭕️ | ✅ | ✅ | ✅ | ⭕️ | ✅ |   | | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [Juktong](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Juktong.md) | ⭕️ | ✅ | ✅ | ✅ | ⭕️ | ✅ | ✅ |   | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [rockyfang](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/rockyfang.md) | ⭕️ | ✅ | ✅ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | |
 | [EchoZheng2333](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/EchoZheng2333.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ |   | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [jitash](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/jitash.md) | ⭕️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ |   | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
@@ -167,6 +167,7 @@ Passcode: 955074
 | [Bo](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Bo.md) | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ |   | | | | | | | |   |   |   |   |   |   |   |   |   |   |   |
 | [0xAlexWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/0xAlexWu.md) | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | | | |
 <!-- END_COMMIT_TABLE -->
+
 
 
 
