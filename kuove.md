@@ -480,4 +480,78 @@ type Contract struct {
     value *uint256.Int       
 }
 ```
+### 2025.06.23
+#### 其他模块实现
+执行层的功能通过分层的方式来实现，其他的模块和功能都是在这三个核心组件的基础之上构建起来的。
+以下是几个核心的模块。
+
+在 eth/protocols 下有当前以太坊的p2p网络子协议的实现。有 eth/68 和 snap 子协议，这个些子协议都是在 devp2p 上构建的。
+
+eth/68 是以太坊的核心协议，协议名称就是 eth，68 是它的版本号，然后在这个协议的基础之上又实现了交易池（TxPool）、区块同步（Downloader）和交易同步（Fetcher）等功能。snap 协议用于新节点加入网络时快速同步区块和状态数据的，可以大大减少新节点启动的时间。
+
+ethdb 提供了底层数据库的读写能力，由于以太坊协议中有很多复杂的数据结构，直接通过 ethdb 无法实现这些数据的管理，所以在 ethdb 上又实现了 rawdb 和 statedb 来分别管理区块和状态数据。
+
+EVM 则贯穿所有的主流程，无论是区块构建还是区块验证，都需要用 EVM 执行交易。
+
+#### Geth 节点启动流程
+Geth 的启动会分为两个阶段，第一阶段会初始化节点所需要启动的组件和资源，第二节点会正式启动节点，然后对外服务。
+![Geth 节点启动流程](https://forum.lxdao.io/uploads/default/original/2X/3/34e938761faadcf5c92e11d9ac4d90d7114c9deb.png)
+
+##### 节点初始化
+在启动一个 geth 节点时，会涉及到以下的代码：
+![启动geth节点](https://forum.lxdao.io/uploads/default/original/2X/7/7919a72816f209e7ff9eebd8a27de508181134e7.png)
+
+各模块的初始化如下：
+
+    cmd/geth/main.go：geth 节点启动入口
+    cmd/geth/config.go（makeFullNode）：加载配置，初始化节点
+    node/node.go：初始化以太坊节点的核心容器
+    node.rpcstack.go：初始化 RPC 模块
+    accounts.manager.go：初始化 accountManager
+    eth/backend.go：初始化 Ethereum 实例
+    node/node.go OpenDatabaseWithFreezer：初始化 chaindb
+    eth/ethconfig/config.go：初始化共识引擎实例（这里的共识引擎并不真正参与共识，只是会验证共识层的结果，以及处理 validator 的提款请求）
+    core/blockchain.go：初始化 blockchain
+    core/filterMaps.go：初始化 filtermaps
+    core/txpool/blobpool/blobpool.go：初始化 blob 交易池
+    core/txpool/legacypool/legacypool.go：初始化普通交易池
+    cord/txpool/locals/tx_tracker.go：本地交易追踪（需要配置开启本地交易追踪，本地交易会被更高优先级处理）
+    eth/handler.go：初始化协议的 Handler 实例
+    miner/miner.go：实例化交易打包的模块（原挖矿模块）
+    eth/api_backend.go：实例化 RPC 服务
+    eth/gasprice/gasprice.go：实例化 gas 价格查询服务
+    internal/ethapi/api.go：实例化 P2P 网络 RPC API
+    node/node.go(RegisterAPIs)：注册 RPC API
+    node/node.go(RegisterProtocols)：注册 p2p 的 Ptotocols
+    node/node.go(RegisterLifecycle)：注册各个组件的生命周期
+    cmd/utils/flags.go(RegisterFilterAPI)：注册 Filter RPC API
+    cmd/utils/flags.go(RegisterGraphQLService)：注册 GraphQL RPC API（如果配置了的话）
+    cmd/utils/flags.go(RegisterEthStatsService)：注册 EthStats RPC API（如果配置了的话）
+    eth/catalyst/api.go：注册 Engine API
+节点的初始化会在 cmd/geth/config.go 中的 makeFullNode 中完成，重点会初始化以下三个模块：
+![重点会初始化以下三个模块](https://forum.lxdao.io/uploads/default/original/2X/6/66dabd43a59e5bfe9962a5afb2ef0ecc6e90e002.png)
+
+在第一步会初始化 node/node.go 中的 Node 结构，就是整个节点容器，所有的功能都需要在这个容器中运行，第二步会初始化 Ethereum 结构，其中包括以太坊各种核心功能的实现，Etherereum 也需要注册到 Node 中，第三步就是注册 Engine API 到 Node 中。
+
+其中 Node 初始化就是创建了一个 Node 实例，然后初始化 p2p server、账号管理以及 http 等暴露给外部的协议端口。
+![Node初始化](https://forum.lxdao.io/uploads/default/optimized/2X/6/66dabd43a59e5bfe9962a5afb2ef0ecc6e90e002_2_1380x644.png)
+
+
+Ethereum 的初始化就会复杂很多，大多数的核心功能都是在这里初始化。首先会初始化化 ethdb，并从存储中加载链配置，然后创建共识引擎，这里的共识引擎不会执行共识操作，而只是会对共识层返回的结果进行验证，如果共识层发生了提款请求，也会在这里完成实际的提款操作。然后再初始化 Block Chain 结构和交易池。
+
+这些都完成之后就会初始化 handler，handler 是所有 p2p 网络请求的处理入口，包括交易同步、区块下载等等，是以太坊实现去中心化运行的关键组件。在这些都完成之后，就会将一些在 devp2p 基础之上实现的子协议，比如 eth/68、snap 等注册到 Node 容器中，最后 Ethereum 会作为一个 lifecycle 注册到 Node 容器中，Ethereum 初始化完成。
+![Ethereum初始化](https://forum.lxdao.io/uploads/default/optimized/2X/f/fb8584abc9d9f024033d491eecfe2a7fc5862bff_2_1380x780.png)
+最后 Engine API 的初始化相对简单，只是将 Engine API 注册到 Node 中。到这里，节点初始化就全部完成了。
+
+节点启动
+在完成节点的初始化之后，就需要启动节点了，节点启动的流程相对简单，只需要将已经注册的 RPC 服务和 Lifecycle 全部启动，那么整个节点就可以向外部提供服务了。
+![节点启动](https://forum.lxdao.io/uploads/default/original/2X/b/b6721d53f2e6f6afa9faad10f714889b70717b3c.png)
+
+
+##### 总结
+在深入理解以太坊执行层的实现之前，需要对以太坊有一个整体的认识，可以将以太坊整体看作是一个交易驱动的状态机，执行层负责交易的执行和状态的变更，共识层则负责驱动执行层运行，包括让执行层产出区块、决定交易的顺序、为区块投票、以及让区块获得最终性。由于这个状态机是去中心化的，所以需要通过 p2p 网络与其他的节点通信，共同维护状态数据的一致性。
+
+在执行层不负责决定交易的顺序，只负责执行交易并记录交易执行之后的状态变化。这里的记录有两种形式，一种是以区块的方式将所有的状态变化都记录下来，另一种是在数据库中记录当前的状态。同时执行层也是交易的入口，通过交易池来存储还没有被打包进区块的交易。如果其他的节点需要获取区块、状态和交易数据，执行层就会通过 p2p 网络将这些信息发送出去。
+
+对于执行层，有三个核心模块：计算、存储和网络。计算对应 EVM 的实现，存储则对应了 ethdb 的实现，网络对了 devp2p 的实现。有了这样的整体认识之后，就可以深入去理解每一个子模块，而不会迷失在具体的细节中。
 <!-- Content_END -->
