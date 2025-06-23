@@ -183,4 +183,28 @@ class Example
 
 > <END_OF_TODAY> [BOOKMARK](https://epf.wiki/#/wiki/CL/SSZ)
 
+### 2025.06.20
+---
+- SSZ具体各种类型的数据的序列化方法： https://epf.wiki/#/wiki/CL/SSZ
+- Merkleization: 指将序列化后的数据构造为Merkle树并得到其根hash的过程
+- 弱主观性 *weak subjectivity*
+	- 客观：信息的正确性完全可验证
+	- 主观：信息的正确性并不能完全可验证
+- *Full Syncing*：指PoW时期，所有合法区块都一定可以完美追溯到Genesis块
+	- 然后转入PoS之后，由于finality来自于CL而非EL
+	- 要断言一个finalized的checkpoint的正确性，必须要额外的验证
+- validator退出CL之后，将不能再为未来的区块投票，但仍可以对过去的区块重新投票
+- Beacon block syncing 和 Execution block Syncing 的区别
+	1. Beacon chain的syncing是反方向的
+	2. Beacon chain的信任锚点是主观的：Beacon chain的同步目标是一个“最终确定”区块，但它不能被完全客观验证，只能部分验证其正确性。因此，这个检查点需要通过**链外途径（out-of-band）**获取
+	3. 弱主观性周期与乐观导入：在 Execution 层尚未完成同步时，Beacon 链会先 **乐观导入（optimistically import）** 新块，但暂不验证其 Execution Payload
+- **Weak Subjectivity Sync** 步骤
+	1. Obtain a weak subjectivity checkpoint out-of-band （因为p2p层中的peer是不可信的）
+	2. Backfill blocks all the way back to genesis from the weak subjectivity checkpoint
+	3. Update the target header for the execution chain
+	4. Optimistically follow the head of the chain and continuously update the target header for the execution chain
+	5. Once the EL is synced, then mark the CL slots as verified post-verification. The node may now be considered fully synced
+
+> <END_OF_TODAY>
+
 <!-- Content_END -->
