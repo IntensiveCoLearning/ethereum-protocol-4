@@ -621,4 +621,59 @@ Share 512: [f(8176), f(8177), ..., f(8191)]
 最终: 完全分片的数据可用性层
 ```
 
+# 2025.06.23
+
+PeerDAS works by having each client listen on a small number of subnets, where the i'th subnet broadcasts the i'th sample of any blob, and additionally asks for blobs on other subnets that it needs by asking its peers in the global p2p network (who would be listening to different subnets).
+
+so ultimately we want to go further, and do 2D sampling, which works by random sampling not just within blobs, but also between blobs.
+
+TODO https://www.paradigm.xyz/2022/08/das
+
+Data availability 对区块链非常重要。我们需要一种办法可以下载部分数据即可验证数据可用，因为数据量太大。
+
+TODO PeerDAS on ethresear.ch: https://ethresear.ch/t/peerdas-a-simpler-das-approach-using-battle-tested-p2p-components/16541 , and paper: https://eprint.iacr.org/2024/1362
+
+TODO KZG commitments 的工作原理？
+
+we want more academic work on formalizing PeerDAS and other versions of DAS and its interactions with issues such as fork choice rule safety.
+
+Further into the future, we need much more work figuring out the ideal version of 2D DAS and proving its safety properties. We also want to eventually migrate away from KZG to a quantum-resistant, trusted-setup-free alternative.
+
+### BLS 与 ECDSA 的简明对比
+
+- **数学环境**
+  - ECDSA: 普通椭圆曲线（secp256k1）
+  - BLS: 配对友好曲线（BLS12-381），支持双线性映射
+- **随机数需求**
+  - ECDSA: 每次签名必须生成随机 nonce `k`，泄露或复用会暴露私钥
+  - BLS: 无需随机数，签名公式只有 `sk · H(m)`
+- **签名大小**
+  - ECDSA: 64 字节 `(r, s)`
+  - BLS: 48 字节（压缩曲线点），并且可聚合成 1 个签名
+- **聚合能力**
+  - ECDSA: 需要交互式多签协议（MuSig2 等），链上数据仍是 64 字节
+  - BLS: 天生非交互聚合，多人签名可直接相加，链上只存 48 字节
+- **验证成本**
+  - ECDSA: 快，一次曲线运算
+  - BLS: 一次配对运算，单签慢约 5-10×，但聚合后摊薄
+- **典型使用场景**
+  - ECDSA: 以太坊执行层账户签名、比特币
+  - BLS: 以太坊共识层 attestation 聚合、阈值签名、Filecoin
+
+> 小结：BLS 通过"无随机数 + 配对 + 聚合"把大量签名压缩到 1 条，非常适合成千上万验证者一起上链；而 ECDSA 实现简单、单签更快，在账户签名等场景仍然主流。
+
+## Data compression
+
+几个可以将 blockchain 数据压缩的思路和方法：
+
+- 签名聚合，从 ECDSA 到 BLS，这样可以合并多个签名并且确认其他签名是真实的
+- 使用 pointer 指向 addresses，目前 address 是 20-byte，如果只有 history 存储过，可以使用 4-byte 的 pointer 指向这个地址
+- 自定义交易 values 的单位，比如 1000000000000000000 可以表示为 1 ETH，这样就可以节省空间
+
+比较大的挑战：
+
+- 切换 BLS 的开发成本很大，而且还要考虑 hardware chips 的安全性
+- 动态压缩数据让客户端实现更复杂
+- 可能会让一些外部软件比如 explorers 失效或者需要重新开发
+
 <!-- Content_END -->
