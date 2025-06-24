@@ -103,5 +103,8 @@ There are two main approaches to achieving The Verge's goals: Verkle Trees and S
 | STARK w/ Conservative Hashes (SHA256, BLAKE) | Data + 100–300 kB | Trusted                     | >10s        |
 | STARK w/ Aggressive Hashes (Poseidon, Ajtai) | Data + 100–300 kB | Less mature                 | 1–2s        |
 
+### 2025.06.22
+#### The Purge
+Today, I started reading the Purge, which is about reducing data storage burden on clients whileing preserving ETH's permanence of on-chain data. However, I haven't finished reading this passage. Hence, I'll summarize tmr. 
 
 <!-- Content_END -->

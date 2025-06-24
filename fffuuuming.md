@@ -288,5 +288,112 @@ EVM 则贯穿所有的主流程，无论是区块构建还是区块验证，都�
         - 最后 `Ethereum` 会作为一个 `lifecycle` 注册到 `Node` 容器中
     - 注册 Engine API 到 `Node` 中。
 2. **节点启动**: 将已经注册的 `RPC` 服务和 `Lifecycle` 全部启动，整个节点即可向外部提供服务。
+### 2025.06.23
+[Geth 源码系列 II：存储设计及实现](https://forum.lxdao.io/t/geth-ii/2857)
+---
+Geth 將 database 分成
+- **快速访问存储 (KV database)**: 用于最近的区块和状态数据
+- **freezer 的存储**: 用于较旧的区块和收据数据，即 “ancients”
 
+透過將基本是静态的历史数据存在 freezer，减少对昂贵、易损的 SSD 的依赖，並减轻 LevelDB/PebbleDB 的压力，用于存储更活跃的数据
+
+以下我們重點討論状态数据，它存储在 KV 数据库中。因此之後提到的底层数据库默认是指 KV 存储
+
+#### Architecure & Overview
+![9c386e7b33c68114a619f8a60b4ad3e86db87e92](https://hackmd.io/_uploads/r1_bPH4Vll.png)
+
+- `ethdb`: 抽象了物理存储，屏蔽具体数据库类型
+- `rawdb`: 负责对 `block` 、`header`、`transaction` 等核心链上数据结构的**编码**、**解码**与**封装**，简化了链数据的读写操作
+- `TrieDB`: 管理状态树节点的缓存与持久化
+- `trie.Trie`: 状态变化的执行容器与根哈希的计算核心，承担实际的状态构建与遍历操作
+- `state.Database` 封装对账户和 Account Storage Trie 的统一访问，并提供合约代码缓存
+- `state.StateDB` 是在区块执行过程中与 `EVM` 对接的接口，提供账户与存储的读缓存和写支持，使得 `EVM` 无需感知底层 Trie 的复杂结构。
+
+通过多层抽象与多级缓存，上层模块无需关心底层的具体实现，从而实现了**底层存储引擎的可插拔性**与较高的 I/O 性能。
+
+---
+
+#### 源码视角下的存储分层: 6种DB
+
+**`StateDB`**
+- 角色: EVM 与底层状态存储之间的唯一桥梁
+    - 负责抽象和管理合约账户、`balance`、`nonce`、storage slot 等信息的读写, ex:
+        ```go!
+        // 读相关
+        func (s *StateDB) GetBalance(addr common.Address) *uint256.Int 
+        func (s *StateDB) GetStorageRoot(addr common.Address) common.Hash 
+        // 写入dirty状态数据
+        func (s *StateDB) SetStorage(addr common.Address, storage map[common.Hash]common.Hash) 
+        // 将EVM执行过程中发生的状态变更(dirty数据) commit到后端数据库中
+        func (s *StateDB) commitAndFlush(block uint64, deleteEmptyObjects bool, noStorageWiping bool) (*stateUpdate, error)
+        ```
+    - 提供临时状态变更的记录，只有在最终确认后才会写入底层数据库 
+    - 对所有其他数据库（TrieDB, EthDB）的状态相关读写都由 `StateDB` 中的相关接口触发
+        > 開法者通常只關心和修改 `StateDB` 结构以适应自己的业务逻辑 底层的 `EthDB` 或 `TrieDB` 不太需要關注
+- 核心结构: `stateObjects` (per account)，用於記錄該地址的資訊(e.g. contract code, storage...)
+- 生命周期: only one block
+    - **初始化與加載**: 每個區塊執行期間建立一個新的 `StateDB`, 第一次讀取某個地址時，從 `Trie → TrieDB → EthDB` 加載帳戶資料，建立對應的 `stateObject`, clean now
+    - **狀態變更與標記**: 若交易修改帳戶或儲存槽，對應 `stateObject` change to dirty, `stateObject` 同時追蹤
+	    - 初始狀態（`originalStorage`）
+	    - 所有變更（修改後的 storage slot）
+    - **交易執行與確認**: 若交易最終被接受並打包，會調用 `StateDB.Finalise()`
+        - 移除 `selfdestruct` 合約
+        - 重置 journal與 gas refund counter
+    - **狀態提交與持久化**: 所有交易結束後調用 `StateDB.Commit()`，在此之前狀態樹 Trie 在此之前尚未被更改
+        - 將記憶體中變更寫入 Trie，計算各帳戶的 storage root （生成账户的最终状）與整體 stateRoot
+        - 髒狀態對象寫入 Trie，並傳給 TrieDB
+
+**`State.Database`**
+- 角色：连接 `StateDB` 与底层数据库（`EthDB` & `TrieDB`）
+    - 提供統一的狀態 Trie 存取接口 (`state.cachingDB`)，簡化並封裝帳戶與儲存 Trie 的開啟邏輯。
+        ```go!
+        func (db *cachingDB) OpenTrie(root common.Hash) (Trie, error)
+        func (db *cachingDB) OpenStorageTrie(stateRoot common.Hash, address common.Address, root common.Hash, trie Trie) (Trie, error)
+        ```
+    - 合約碼快取 & 復用 (code cache)：bytecode 存取成本高
+        ```go!
+        func (db *CachingDB) ContractCodeWithPrefix(address common.Address, codeHash common.Hash) []byte
+        ```
+    - 長生命周期、跨區塊共用：
+    - 为未来的 Verkle Tree 迁移做准备
+
+**`Trie`**
+- 角色：衔接 `StateDB` 与底层存储之间的桥梁，本身并不存储数据
+- 工作：计算状态根哈希和收集修改节点
+    - `EVM` 执行交易或调用合约时：Trie 接收账户地址和存储槽位的查询与更新请求，并在内存中构建状态变化路径。这些路径最终通过递归哈希运算，自底向上生成新的根哈希（state root），这个根哈希是当前世界状态的唯一标识，并被写入区块头中，确保状态的完整性和可验证性。
+    - 提交阶段 (`StateDB.Commit`): Trie collapse all modified nodes into a subset, then forward to `TrieDB`，由其进一步交由后端的节点数据库（e.g. `HashDB` / `PathDB`）持久化。
+---
+六种 DB 的创建顺序和调用链: `ethdb → rawdb/TrieDB → state.Database → stateDB → trie`
+
+**`TrieDB`**
+- 角色：专注于 Trie 节点的存取与持久化，每一个 Trie 节点（无论是账户信息还是合约的存储槽）最终都会通过 `TrieDB` 进行读写。
+- 實現：
+    - `HashDB`：以哈希為鍵
+    - `PathDB`：以路径信息作为键，优化了更新与修剪性能
+- 读取逻辑: 实现 `database.Reader` interface
+    ```go!
+    type Reader interface {
+        Node(owner common.Hash, path []byte, hash common.Hash) ([]byte, error)
+    }
+    ```
+    - 根據 node's hash/path 从 trie 树中定位并返回该节点。如果是账户 trie，则 `owner` 留空。如果是合约的存储 trie，则 `owner` 是该合约的地址 (每个合约都有自己独立的存储 trie)
+    - 返回的是原始字节数组 —— TrieDB 对节点的内容并不关心，由上层的Trie 解析是否為账户节点、叶子节点还是分支节点
+        - 它让 Trie 与物理存储系统之间解耦，使得不同存储模型可以灵活替换而不影响上层逻辑。
+
+**`RawDB`**
+- 角色：存储系统的基础接口层，对底层数据库的抽象封装层
+    - 定义了所有核心链上数据的键值格式和访问接口：作为内部工具服务于如 TrieDB、StateDB、BlockChain 等模块的持久化操作
+    - 负责定义存取规则，而非执行最终的数据落盘或读取，也不直接存储数据本身 （跟 trie 一樣）
+
+**`EthDB`**
+- 角色：整个存储系统的核心抽象，屏蔽底层数据库实现的差异，统一的**键值读写接口**
+
+| DB模塊             | 創建時機                     | 生命週期       | 主要職責                                                                 |
+|--------------------|------------------------------|----------------|--------------------------------------------------------------------------|
+| **ethdb.Database** | 節點初始化                   | 程序全程       | 抽象底層存儲，統一接口（LevelDB / PebbleDB / Memory）                   |
+| **rawdb**          | 包裹 ethdb 調用              | 不存儲數據本身 | 提供區塊/receipt/總難度等鏈數據的讀寫接口                              |
+| **TrieDB**         | `core.NewBlockChain()`       | 程序全程       | 緩存 + 持久化 PathDB/HashDB 節點                                        |
+| **state.Database** | `core.NewBlockChain()`       | 程序全程       | 封裝 TrieDB，合約代碼緩存，後期支援 Verkle 遷移                         |
+| **state.StateDB**  | 每個區塊執行前創建一次       | 區塊執行期間   | 管理狀態讀寫，計算狀態根，記錄狀態變更                                  |
+| **trie.Trie**      | 每次帳戶或 slot 訪問時創建   | 臨時，不存儲數據本身 | 負責 Trie 結構修改和根哈希計算                                      |
 <!-- Content_END -->
