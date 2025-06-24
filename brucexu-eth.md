@@ -676,4 +676,26 @@ Further into the future, we need much more work figuring out the ideal version o
 - 动态压缩数据让客户端实现更复杂
 - 可能会让一些外部软件比如 explorers 失效或者需要重新开发
 
+# 2025.06.24
+
+## Generalized Plasma
+
+16MB 的 blobs，58000 TPS 也不够 consumer payments、decentralized social 等。由于 privacy 的加入，还会缩小 3-8x。
+
+Plasma 是一种扩容方案，就是链下发布 block 和 tx，然后把交易的 Merkle roots 更新到链上。
+
+Early versions of Plasma were only able to handle the payments use case, and were not able to effectively generalize further.
+
+One way (not the only way) to make an EVM plasma chain: use a ZK-SNARK to construct a parallel UTXO tree that reflects the balance changes made by the EVM, and defines a unique mapping of what is "the same coin" at different points in history. A Plasma construction can then be built on top of that.
+
+### Validium vs Rollup
+
+在 L1 上面存储少量的信息（例如 ZK-SNARK 证明），链下的数据如果以 calldata 或者 blob 的方式上 L1 或者 DA，让所有人可以参与验证，就是 Rollup，如果完全自己处理，就是 Validium。后者的话，如果运营商跑路，那么数据就会丢失无法退出。
+
+隐私性方面，Validium 比较容易实现，如果必须要公开，Aztec 使用加密后的数据发到 L1，然后通过密钥可以解开。
+
+TPS 的计算，单纯从存储的数据量来计算不对吧，还要考虑网络和计算成本？
+
+any validium can have its safety properties improved at least a little bit by adding Plasma features into the exit mechanism.
+
 <!-- Content_END -->
