@@ -134,6 +134,7 @@ What's next:
 - 每个 epoch（32 个 slot）开始时，所有活跃验证者被随机分配到不同委员会
 - 每个 slot 都有一个委员会负责对该 slot 的区块进行证明
 - 委员会大小通常为 128 个验证者（根据总验证者数量可调整）
+  > **AI 补充**: 128 是协议设定的**最小**委员会规模 (`TARGET_COMMITTEE_SIZE`)。实际的委员会规模是根据当前活跃验证者的总数动态计算的 (`活跃验证者总数 / 32`)。例如，在有 960,000 名活跃验证者时，每个 slot 的委员会会有 `960,000 / 32 = 30,000` 名验证者。这个庞大的委员会内部还会再被分成多个子网 (subnet) 来处理证明。所以，目前实际的委员会规模远大于 128。
 - 基于 RANDAO 生成的随机数进行分配
 
 ### Attestation 具体流程
@@ -491,6 +492,8 @@ f(4) = 16a + 4b + c = 33
 评估点: x = 0, 1, 2, ..., 8191
 ```
 
+> **AI 补充**: 这是一个常见的混淆点。一个 Blob 由 **4096 个**数据块 (field elements) 组成，这些数据块作为系数，定义了一个**最高 4095 次**的多项式 (`P(x) = c₀ + c₁x + ... + c₄₀₉₅x⁴⁰⁹⁵`)。就像 3 个点可以唯一确定一个 2 次多项式（抛物线）一样，`n+1` 个系数可以定义一个 `n` 次多项式。
+
 #### 3.2 Blob 数据处理
 
 ```
@@ -531,6 +534,11 @@ Share 512: [f(8176), f(8177), ..., f(8191)]
 - 下载比例: 64/512 ≈ 12.5%
 - 验证能力: 完整数据可用性确认
 ```
+
+> **AI 补充**: 这里可能混淆了“数据可用性采样 (sampling)”和“数据恢复 (recovery)”两个概念。
+>
+> - **采样 (Sampling)**: 轻节点（或验证者）随机下载少量 (例如 64 个) shares 的目的是为了**验证**数据是可用的，它以极高的概率确信，如果这些随机样本存在，那么完整数据也一定存在。单个节点**不会**用这少量样本去恢复完整数据。
+> - **恢复 (Recovery)**: 要完整地恢复一个 Blob，需要下载足够多的 shares 以重建那个 4095 次的多项式。具体来说，需要获得 **4096 个**不同的评估点。由于每个 share 包含 16 个评估点，所以理论上至少需要 `4096 / 16 = 256` 个完整的 shares 才能进行数据恢复。
 
 ### 4. 数据可用性采样工作流程
 
@@ -697,5 +705,48 @@ One way (not the only way) to make an EVM plasma chain: use a ZK-SNARK to constr
 TPS 的计算，单纯从存储的数据量来计算不对吧，还要考虑网络和计算成本？
 
 any validium can have its safety properties improved at least a little bit by adding Plasma features into the exit mechanism.
+
+# 2025.06.25
+
+## L2 proof systems
+
+目前的 L2 还是依赖 security council 等机制，不是非常的安全和去中心化。但是担心 code 有 bug，所以不敢放的泰开。
+
+目前 Layer 2 有几个 stages 的定义；
+
+- Stage 0：用户可以自己 run node 和同步数据，validation 可以是 centralized 和 trusted，比较中心化
+- Stage 1：添加 trustless proof system，允许一个 75% threshold vote 的 security council 可以控制，其中 26%+ 投票者必须不在这个团队
+- Stage 2：trustless proof system，security council 只能在代码出 bug 的情况下介入。支持升级，但是需要一个 long 时间锁。
+
+The main challenge in reaching stage 2 is getting enough confidence that the proof system actually is trustworthy enough.
+
+- Formal verification: we can use modern mathematical and computational techniques to prove that an (optimistic or validity) proof system only accept blocks that pass the EVM specification.
+- Multi-provers: make multiple proof systems, and put funds into a 2-of-3 (or larger) multisig between those proof systems and a security council (and/or other gadget with trust assumptions, eg. TEEs).
+
+For formal verification, we need to create a formally verified version of an entire SNARK prover of an EVM.
+
+形式化验证 (Formal Verification) 是一种基于数学和逻辑的方法，用来证明一个系统（如一个软件程
+序、一个硬件芯片或一个密码学协议）的正确性是否符合其预先设定的规约 (Specification)。
+
+换句话说，它不是通过运行测试用例来“寻找 bug”，而是通过严格的数学推导来“证明 bug
+不存在”（在给定的规约下）。
+
+与传统测试 (Testing) 的核心区别
+
+为了更好地理解，我们可以用一个比喻：
+
+- 传统测试 (Testing): 就像是造好一座桥后，让几百辆不同重量的卡车开过去，看看桥会不会塌。如果卡车都安全通过了，你会对桥的质量有信心，但你无法保证第一千辆、或者一辆设计奇特的卡车开过去时，桥一定不会塌。测试只能发现 bug，但不能证明没有 bug。
+- 形式化验证 (Formal Verification): 就像是在设计阶段，工程师运用物理学和材料力学的所有定律，通过数学计算和逻辑推导，证明出这座桥的设计在理论上可以承受所有低于设计载重的车辆，无论它们是什么形状或重量。它提供的是一种数学上的保证。
+
+形式化验证在航空航天、芯片设计等高风险领域早已是标配，而它对于区块链来说同样至关重要，原因如下：
+
+1.  不可变性 (Immutability): 智能合约一旦部署到链上，就几乎无法修改。如果事后发现一个严重 bug，你不能像传统软件那样发布一个补丁了事，唯一的办法可能是迁移到新合约，这会带来巨大的成本和风险。
+2.  高价值 (High Stakes): 智能合约掌管着价值数十亿甚至上百亿美元的数字资产。一个微小的 bug，比如 The DAO 事件中的重入攻击漏洞，就可能导致灾难性的财务损失。
+3.  自治性 (Autonomous Nature): “代码即法律 (Code is Law)”。智能合约会根据预设逻辑自动执行，没有管理员可以中途干预。因此，代码逻辑的绝对正确性是信任的基础。
+
+目前主要局限就是：
+
+- 成本高：验证过程耗时、需要专业数学和逻辑知识
+- 规约是关键: 它只能保证代码符合你写的规约。如果你在规约阶段就遗漏了某个重要的安全属性，那么即使验证通过，系统依然可能存在漏洞。它回答的是“我们是否正确地构建了系统？”，而不是“我们是否构建了正确的系统？”。
 
 <!-- Content_END -->
