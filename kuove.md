@@ -580,5 +580,36 @@ Geth 中包含
 StateDB、state.Database、trie.Trie、TrieDB、rawdb 和 ethdb 六个数据库模块，
 它们如同一棵“状态生命树”的各个层级。最顶层的 StateDB 是 EVM 执行阶段的状态接口，负责处理账户与存储的读写请求，并将这些请求逐层下传，最终由最底层负责物理持久化的 ethdb 读/写物理数据库。
 ![6种DB](https://forum.lxdao.io/uploads/default/original/2X/9/9c386e7b33c68114a619f8a60b4ad3e86db87e92.png)
+
+### 2025.06.25
 ##### StateDB
+
+在 Geth 中，StateDB 是 EVM 与底层状态存储之间的唯一桥梁，负责抽象和管理合约账户、余额、nonce、存储槽等信息的读写，对所有其他数据库（TrieDB, EthDB）的状态相关读写都由StateDB中的相关接口触发，可以说 StateDB 是所有状态数据库的大脑。
+它并不直接操作底层的 Trie 或底层数据库（ethdb），而是提供一个简化的内存视图，让 EVM 能以熟悉的账户模型进行交互。
+因此，多数依赖 Geth 的项目其实也不会关心底层的 EthDB或 TrieDB 是怎么实现的——它们能正常工作就够了，没必要动。大多数基于 Geth 的分叉项目都会修改StateDB 结构，以适应自己的业务逻辑。例如，Arbitrum 修改了 StateDB 以管理它们的 Stylus 程序；EVMOS 修改了 StateDB 来追踪对其有状态预编译合约（stateful precompile）的调用。
+
+源码中，StateDB 的主要定义位于 core/state/statedb.go。它的核心结构维护了一系列内存状态对象（stateObject），每个stateObject对应一个账户（包含合约存储）。它还包含一个 journal（事务日志）用于支持回滚，以及用于追踪状态更改的缓存机制。在交易处理和区块打包过程中，StateDB 提供临时状态变更的记录，只有在最终确认后才会写入底层数据库。
+
+StateDB 的核心读写接口如下，基本都是账户模型相关的API:
+```
+// 读相关
+func (s *StateDB) GetBalance(addr common.Address) *uint256.Int 
+func (s *StateDB) GetStorageRoot(addr common.Address) common.Hash 
+// 写入dirty状态数据
+func (s *StateDB) SetStorage(addr common.Address, storage map[common.Hash]common.Hash) 
+// 将EVM执行过程中发生的状态变更(dirty数据) commit到后端数据库中
+func (s *StateDB) commitAndFlush(block uint64, deleteEmptyObjects bool, noStorageWiping bool) (*stateUpdate, error)
+```
+
+###### 生命周期
+StateDB的生命周期只持续一个区块。在一个区块被处理并提交之后，这个 StateDB 就会被废弃，不再具有作用
+```
+EVM 第一次读取某个地址时，StateDB 会从Trie→TrieDB→EthDB数据库中加载它的值，并将其缓存一个新的状态对象（stateObject.originalStorage）中。这一阶段被视为“干净的对象”（clean object）。
+当交易与该账户发生交互并改变其状态时，对象就变成“脏的”（dirty）。stateObject会同时追踪该账户的原始状态和所有修改后的数据，包括其存储槽及其干净/脏状态。
+如果整个交易最终成功被打包到区块，StateDB.Finalise() 会被调用。这个函数负责清理已 selfdestruct 的合约，并重置 journal（事务日志）以及 gas refund 计数器。
+当所有交易都执行完毕后，StateDB.Commit() 被调用。在这之前，状态树Trie实际上还未被更改。直到这一步，StateDB 才会将内存中的状态变更写入存储 Trie，计算出每个账户的最终 storage root，从而生成账户的最终状态。接下来，所有“脏”的状态对象会被写入 Trie中，更新其结构并计算新的 stateRoot。
+最后，这些更新后的节点会被传递给 TrieDB，它会根据不同的后端（PathDB/HashDB）缓存这些节点，并最终将它们持久化到磁盘（LevelDB/PebbleDB）——前提是这些数据没有因为链重组被丢弃。
+```
+
+
 <!-- Content_END -->
