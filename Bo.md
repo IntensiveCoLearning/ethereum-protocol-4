@@ -42,4 +42,6 @@ https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/POS.md
 请假
 ### 2025.06.25
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/ForkChoice.md
+### 2025.06.26
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/EngineAPI.md
 <!-- Content_END -->
