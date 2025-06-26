@@ -440,5 +440,46 @@ Geth 採用兩個協議棧:
 4. `DevP2P` 協議層握手
 交換各自支援的子協議及版本 (e.g. `eth`, `snap`, `les`...)，並協商使用**雙方共同支援**的最高版本協議
 5. 通過選定的子協議進行資料交換 (e.g. 通过 `eth` 协议，节点同步区块、交易、链状态等核心数据)
+### 2025.06.26
+[Possible futures of the Ethereum protocol, part 1: The Merge](https://vitalik.eth.limo/general/2024/10/14/futures1.html#1)
+---
+#### Core Objectives
+- **Single-slot finality (SSF)** – finalize transactions in one 12-second slot.
+- **Lower staking requirements** – allow staking with 1 ETH (vs. 32 ETH now).
+- **Improve decentralization** – support solo stakers.
+- **Improve robustness** – recover better from 51% attacks.
+- **Faster confirmations** – better UX for users and rollups.
+---
+#### SSF & Staking Democratization
+Current finality takes ~15 minutes (2–3 epochs), and 32 ETH is required to stake — too much for many individuals. This is because that Ethereum wants to achieve
+- **economic finality**: Once a block is finalized, it cannot be reverted unless an attacker burns (loses) a large amount of ETH.
+- A compromise meant to balance following between three goals:
 
+Trade-off triangle: apparently they conflict with each other
+![截圖 2025-06-26 下午4.12.23](https://hackmd.io/_uploads/SyAXWY9Nel.png)
+
+**Solution**
+1. Brute-force SSF
+2. Orbit Committees
+3. Two-Tiered Staking
+---
+#### Single Secret Leader Election (SSLE)
+Today, next block proposer is known ahead → risk of targeted **DoS** attacks. Therefore, **SSLE** aims to
+- hides the proposer identity until the block is published
+- ensure for **single requirement**: deterministic, consistent
+
+How does it work ?
+1.	**Blinded ID Generation** for each validator via cryptographic techniques
+2.	**Mixing Process** (Mixnet-style):
+Validators (or proposers) repeatedly shuffle and re-blind the pool of blinded IDs ensuring that the final list of blinded IDs is unlinkable to the original validators.
+3.	**Random Selection**:
+In each slot, Ethereum randomly picks one blinded ID from the mixed pool, and no one knows which real validator it maps to — except the selected validator themselves.
+4.	**Proposing the Block**:
+	- Only the selected validator has the private key needed to prove they own the chosen blinded ID.
+	- They reveal themselves by proposing a block with a valid cryptographic proof
+    
+What's next ?
+- **Simple enough implementation**: complex crypto bloats the protocol
+- **Quantum-resistant**
+- General-purpose ZK infrastructure or use P2P-layer mitigations instead.
 <!-- Content_END -->
