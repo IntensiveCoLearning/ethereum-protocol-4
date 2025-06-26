@@ -749,4 +749,54 @@ For formal verification, we need to create a formally verified version of an ent
 - 成本高：验证过程耗时、需要专业数学和逻辑知识
 - 规约是关键: 它只能保证代码符合你写的规约。如果你在规约阶段就遗漏了某个重要的安全属性，那么即使验证通过，系统依然可能存在漏洞。它回答的是“我们是否正确地构建了系统？”，而不是“我们是否构建了正确的系统？”。
 
+# 2025.06.26
+
+## Cross-L2 interoperability improvements
+
+L2 太多，导致用户很难选择或者切换。比较简单的方式是 re-introduce trust assumptions，就是做一些跨链桥、RPC 等。但是如果我们认为 L2 是 Ethereum 的一部分，我们就需要合并成为一个 unified Ethereum system。
+
+几个解决方案：
+
+- Chain-specific addresses：the chain (L1, Optimism, Arbitrum...) should be part of the address. 帮忙校验，避免打错。
+- Chain-specific payment requests：it should be easy and standardized to make a message of the form "send me X tokens of type Y on chain Z". 某个链 dapp 需要当前钱包支付。
+  - 建立一个标准化的消息格式（例如，通过一个新的 EIP），允许 dApp 创建一个“支付请求”，其中包含所有必要信息：“请在 Z 链上，向地址 A 发送 X 数量的 Y 代币”。钱包可以解析这个请求，然后自动引导用户完成操作（例如，一键切换网络并批准交易）。
+- Cross-chain swaps and gas payment：跨链交易和 gas 支付。
+- Light clients: users should be able to actually verify the chains that they are interacting with, and not just trust RPC providers.
+- Keystore wallets: today, if you want to update the keys that control your smart contract wallet, you have to do it on all N chains on which that wallet exists. Keystore wallets are a technique that allow the keys to exist in one place (either on L1, or later potentially on an L2), and then be read from any L2 that has a copy of the wallet. 在 L1 设置变量，其他 L2s 都进行读取。
+- More radical "shared token bridge" ideas: 构建一个新的 rollup 用于记录所有 L2s 的 token balance，比如 USDC 的数量。然后用户发送请求，可以进行账本层面的数据变更。这样不需要通过 L1 进行“换汇“操作，提高效率。
+- Synchronous composability: allow synchronous calls to happen either between a specific L2 and L1, or between multiple L2s. This could be helpful in improving financial efficiency of defi protocols. 同步进行。
+
+我认为 L2 互操作性不只是一个技术问题，还有商业和政治的问题。比如共享代币桥，它要求相互竞争的公司投入巨大成本，去共建一个让用户可以更轻松地“离开自己、投奔对手”的设施。这在商业上是反直觉的。调成本极高: 治理、标准制定、成本分摊等都是巨大的政治难题。
+
+其他的互操作性方案：
+
+- 共享 sequencer：多条 rollup 共用一批 sequencer，同时向多个 L2 出块，天然提供跨链 rollup 同步调用
+- “聚合有效性证明”桥（ZK light-client bridge）：每条 Rollup 把自己的有效性证明 (ZK-SNARK) 递交到一个“证明汇总层”或直接递交给对方 Rollup；对方在本链内验证该证明后即可信任对方状态。
+- 乐观跨 Rollup 消息层（Optimistic Message Layer）：把 L2→L2 消息先“乐观”relay，再开放挑战窗口；若期间无人提交欺诈证明则确认。
+- 意图/订单流撮合网络（Intent-Based / Liquidity Layer）：用户只声明“意图”（intent），去中心化执行器以最佳路径完成操作，可跨多个 L2。
+- 共同数据可用层 / 结算层（Shared DA & Settlement）：多条 L2 把区块数据提交到同一 DA 链（Celestia, EigenDA）并在同一结算链（如 L1 或 EigenLayer AVS）互验证。
+
+## Scaling execution on L1
+
+最简单的方式就是 increase the gas limit。还有就是优化 Ethereum client software 的执行效率。几个方向：
+
+- EOF：优化 EVM 执行效率。现在下掉了，打算做 RISC-V 的 EVM。
+- Multidimensional gas pricing：一个区块只有一种定价规则，就是 gas limit，这个是有问题的。因为不同资源的消耗对节点的压力是不同的，比如计算消耗 CPU、数据消耗网络、存储消耗硬盘。比如一辆货车可以装 1000 公斤货物，可能是一块铅块，也可能是 5 车体积的棉花。前者浪费空间，后者浪费重量。目前货运公司是多维定价，比如按照体积重或者重量重，取高价收费。这样拆分 computation data and storage 的限制，可以组合起来打满。
+- Reduce gas costs of specific opcodes and precompiles：之前为了避免 DoS 攻击，对 opcode 等设置了相应的 gas，现在安全没问题了，可以适当降低 overpriced。
+- EVM-MAX and SIMD：EVM-MAX 旨在为 EVM 添加一组原生的、高效的指令，专门用于处理大数模运算。这是所有现代密码学（包括 ZK-SNARKs）的基石。SIMD 是单指令多数据，可以并行处理多个数据。结果: 你获得了一个可以并行执行海量、高速、复杂密码学运算的“协处理器”。这正是 ZK-SNARKs、STARKs 和其他高级密码学协议所需要的。
+
+接下来的三个策略：
+
+- Improve technology (eg. client code, stateless clients, history expiry) to make the L1 easier to verify, and then raise the gas limit. 优化客户端代码，让 L1 更容易验证，然后提高 gas limit。
+- Make specific operations cheaper, increasing average capacity without increasing worst-case risks. 降低特定操作的成本，增加平均容量，同时降低最坏情况的风险。
+- Native rollups (ie. "create N parallel copies of the EVM", though potentially giving developers a lot of flexibility in the parameters of the copies they deploy). 原生 rollup，就是“创建 N 个并行的 EVM 副本”，但可能给开发者提供很多灵活的参数。
+
+搞清楚 L1 的终极愿景以及什么属于 L2 也很重要。所有东西都在 L1 上面还是很浪费的，也不太容易验证。所以可能把 DeFi、大资金、Sovereign Ownership 等放在 L1 上面，NFT、Game Assets、buying coffee 等放在 L2 上面。
+
+那需要有一种很方便的方式，可以直接在 L2 上面一笔交易 L1 上面的钱。此外，就是对 L1 的使用量和使用场景有限，是否能支撑起来 L1 的价值？
+
+L2 的 rollup 的终极目标是 Native Rollups，就是直接在 L1 上面运行一个 EVM，然后 L2 的 rollup 直接调用 L1 的 EVM。
+
+假设 L1 是 macOS，那么 L2 就是应用。macOS 并不知道应用具体做了什么，应用也只能将优先的信息和数据存储在操作系统。Native Rollup 是 macOS 的虚拟机，L2 相当于创建了一个虚拟机，有更高的权限，可以访问更多的资源。很多基础的底层的逻辑，会被统一，这样 Rollup 就作为协议层的一等公民，被加入到主协议里面。
+
 <!-- Content_END -->
