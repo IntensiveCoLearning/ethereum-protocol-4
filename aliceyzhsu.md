@@ -352,4 +352,183 @@ type Ethereum struct {
 
 > <END_OF_TODAY>
 
+
+### 2025.06.25
+#### 📗Type
+- `int`的大小是64位（64位系统），同int64
+- 变量类型都是出现在变量名之后的
+	- 多个相同的类型只需要显式声明最后一个 `func add(x, y int) int {}`
+- 类型不同的变量之间不能进行运算，即使是int64和int之间也不能，也就是说**没有隐式类型转换**，需要进行显式类型转换才能运算 `int64(val)`
+- `nil`, `true`, `false`都不是关键字，而是预定义的标识符（变量）
+- `nil`代表各个类型的零值
+- `rune` 是go特有的一个类型，占4个byte，32bits，表示一个unicode字符（是int32的别名）
+- `byte`是uint8的别名
+- **结构体**
+	- 用花括号初始化`v1 = Vertex{1, 2}`
+- **信道channel**
+	- 定义：`ch := make(chan int, 100)` 其中第二个参数为信道缓冲容量，缓冲区填满后，向其发送数据才会阻塞
+	- buffer的意思是，ch里可以先暂存n个，向有buffer的ch里写可以直接往下运行。缺省情况下ch里是不能暂存的，没人读就会阻塞
+	- `ch <- a` 将a发送至信道
+	- `b := <- ch` 将信道中的值输出给b。如果信道中没有值或者信道已关闭，则输出为false
+	- `close(ch)` 来关闭一个信道，一般用完可以不管，不用close
+	- `for i := range ch {}` 来不断从信道接收值，直到信道关闭
+	- 信道在另一端还没有准备好的时候会阻塞，这样就可以使不同的go程同步
+- `any`：变量可以被声明为any类型，这在定义接口时很方便。虽然它可能是任意类型，但其实际存的数据是有一个固定的类型的
+	- `x.(int)` 这是一个type assertion，用于检查any变量实际存储的类型，返回两个值：`value, ok`
+	- 将any类型的变量赋值给别人时，也需要做type assertion
+- **interface**：是一种特殊的类型
+	- 定义新的接口：
+	``` go
+	type Block interface {
+	    BlockSize() int
+	    Encrypt(dst, src []byte)
+	    Decrypt(dst, src []byte)
+	}
+	```
+	- `str, ok := value.(Stringer)` 来判断一个对象是否实现了该接口
+
+#### 📗Data Structure
+- go中没有内置的stack结构，只能用切片来模拟
+	- `s = s[:len(s) - 1]` 来模拟pop
+##### Array
+- array作为函数参数时，传的是一个copy，而非指针
+- array的长度是其类型的一部分，即 `[5]int` 和 `[10]int` 不是同一类型
+##### Slice
+- `var a1 [5]int`和`a2 := make([]int, 5)`是不一样的
+	- 前者创建的是一个固定大小的array（只有`[ ]`里面有具体的数字时，才是一个定长array）
+	- 后者是一个slice，类似于vector，其大小是可伸缩的
+- 切片`var slice []int`，类似于python的list，或者说可变长数组
+- 通过`append`方法来添加新的元素 `numbers = append(numbers, 0)`
+	- 因为有append，实际上也可以等于是一个vec
+- slice 底层维护三个变量 1. 一个数组  2. 一个length（最大索引值） 3. 一个capacity
+	- 而slice变量本身则是这个底层数组的一个引用
+	- 当一个slice赋值给另一个slice时，这两个slice都将指向同一个底层的数组
+	- 最大索引值有时候变得比数组长度小，但底层数组的值并不会消失掉，仍然在那
+- 切片是数组的引用，通过切片会改变底层数组的值
+	- 所以slice作为函数参数时，函数内部对slice的修改在外部也可见，行为类似传了变量的指针
+- 切片的长度就是它所包含的元素个数 `len(s)`
+- 切片的容量是从它的第一个元素开始数，到其底层数组元素末尾的个数。
+	- `cap(s)`
+- 拼接两个切片：`append(s1, s2...)` 其中`...`表示unpacking，把一个collection拆分成单个单个的元素
+- go的数组/切片没有原生的remove方法，可以用 `s = s[:i] + s[i + 2:]` 来实现移除中间元素
+	- 切片的话：`slice = append(slice[:i], slice[i+2:]...)`
+	- 这个操作的复杂度是 $O(n)$ 的，尽量少用
+##### map
+- `myMap := make(map[string]string)` 来创建一个空的map
+- `myMap[key] = val` 来直接插入键值对，类似于python
+- `myMap[key]` 来获取键对应的值，它其实返回两个值：`value, exists` 其中第二个值是一个bool，表示该key原本是否存在
+- 如果键不存在，则对应返回的值为值的零值
+	- 虽然返回零值，但这并不会在map中插入这个key
+- `delete(map, "key")` 来删除一个键值对
+##### string
+- string的本质是immutable的byte数组
+- 可以用`range`关键字来**遍历字符串中的字符** `for idx, char := range str {}`
+- `chars := []bytes(str)` 用类型转换的方式可以将string转换为bytes slice
+- go的string其实很类似于python，可以很方便地实现`+`运算，如`s = "^" + s + "$"`
+##### Heap
+> [official docs](https://pkg.go.dev/container/heap)
+
+- import "container/heap"
+- `type <your_heap> []int` 基于某种已有类型，定义自己的heap类型
+- 必须自己实现接口：
+	- Len: `func (h <your_heap>) Len() int`
+	- Less: `func (h <your_heap>) Less(i, j int) bool`
+	- Swap: `func (h <your_heap>) Swap(i, j int)`
+	- Push: `func (h *<your_heap>) Push(x any)`
+	- Pop: `func (h *<your_heap>) Pop() any`
+	> Push and Pop use pointer receivers because they modify the slice's length, not just its contents.
+
+- 是一个基于自定义Less规则的小堆
+- 初始化：`heap = &<your_heap>{vals}`
+- 注意了，接收者为指针时，函数的调用方式其实类似于静态成员函数：`heap.Push(h, x)`
+- 对于不改变值的函数，也就是接收者为值时，可以直接用类似对象方法的方式调用 `h.Len()`
+- `heap.Pop(h)`之后记得做type assertion，否则不能用
+- 没有Peek方法，只能通过取底层数组的0元素来实现peek：`top := (*h)[0]`
+
+> <END_OF_TODAY>
+
+### 2025.06.26
+#### 📗Geth
+> [goethereumbook](https://goethereumbook.org/en/)
+
+需要 `go mod` 才能丝滑地 import github
+- `go mod init module_name`
+- `go get github.com/ethereum/go-ethereum@latest`
+
+#### 📗Basic
+- ETH 的数额一定是个 `big.Int`
+- data域中每一个字段都必须是 32 bytes 右对齐
+	- data域的第一个字段是调用的函数的 `methodID`
+	- `methodID` 是函数签名的 Keccak-256 hash 的前 4 bytes
+	``` go
+	transferFnSignature := []byte("transfer(address,uint256)")
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(transferFnSignature)
+	methodID := hash.Sum(nil)[:4]
+	fmt.Println(hexutil.Encode(methodID)) // 0xa9059cbb
+	```
+- 部署合约需要 Keyed Transactor
+	``` go
+	auth := bind.NewKeyedTransactor(privateKey)
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)     // in wei
+	auth.GasLimit = uint64(300000) // in units
+	auth.GasPrice = gasPrice
+	```
+- 加载私钥 `privateKey, err := crypto.HexToECDSA("fad...a19")`
+	- 之后，获取私钥对应的地址
+	``` go
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+	  log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+	
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	```
+
+#### 📗Functions
+- `common.HexToAddress("0x123..456")`
+	- 字符串字面量不是 address，必须要经过这个转换成 address 类型
+	- 这个字符串的大小写可以是不固定的，但是经过 `HexToAddress` 变换之后就换变成严格的 **checksum** 的形式
+- `common.LeftPadBytes(amount.Bytes(), 32)` 用于给data域的字段左边补0
+
+- `client.BalanceAt(context.Background(), account, blockNumber)` 返回该账户在指定区块时的balance
+	- `nil` 表示最新的区块
+- `client.TransactionInBlock(context.Background(), blockHash, idx)`
+- `client.TransactionByHash(context.Background(), txHash)`
+- `client.TransactionReceipt(context.Background(), tx.Hash())`
+- `client.PendingNonceAt(context.Background(), fromAddress)`
+- `client.SuggestGasPrice(context.Background())`
+- `client.NetworkID(context.Background())`
+- `client.SendTransaction(context.Background(), signedTx)`
+- `client.EstimateGas(context.Background(), ethereum.CallMsg{ To: &tokenAddress, Data: data, })` 调用合约时，需要先预估 gas 量
+- `client.SubscribeNewHead(context.Background(), headers)` 来订阅最新区块
+	- 其中 `headers` 是一个 channel `headers := make(chan *types.Header)`
+	- 新的区块头会被推入 `headers` 这个信道
+	- 返回的是一个 `sub` 订阅凭证，他有一个 `sub.Err()` 信道，我们需要监测这个信道来检查订阅是否正常
+- `client.SubscribeFilterLogs(context.Background(), query, logs)`
+	- 用来订阅并筛选符合 query 所规定的条件的 logs
+	- `query := ethereum.FilterQuery{ constraints }`
+	- `logs` 是一个信道
+- `client.BlockByHash(context.Background(), header.Hash())` 根据块头hash返回区块信息
+
+- `types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, data)` 创建一个 unsigned 的 tx 对象
+	- `gasLimit` 指定本次交易最多消耗的 gas 单位数 units。对于一个标准的 transfer 交易，`gasLimit = 21000` 
+	- `gasPrice` 指定每个单位的 gas 我们要付多少 wei 的费用，越高被更快打包的可能越大
+	- `data` 为 `nil` 时是一个普通的 ETH 转账交易，有 data 时是一个合约调用
+- `types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)` 
+	- 根据 [EIP-155](https://eips.ethereum.org/EIPS/eip-155) 规定，为了避免跨链的重放攻击，交易签名过程中必须将 `chainID` 纳入
+- `types.Transactions{signedTx}.GetRlp(0)` 来获得交易数据的原始形式
+	- 需要是 signed Tx
+	- 转换为 `types.Transactions` 类型并用它提供的序列化方法 `GetRlp(n)` 得到原始形式
+
+- `ethereum.FilterQuery{ constraints }` 可以有的筛选条件
+	- `FromBlock`
+	- `ToBlock`
+	- `Address`
+	- `Topics`
+- `util.IsValidAddress("0x323...29d")`
+> <END_OF_TODAY>
+
 <!-- Content_END -->
