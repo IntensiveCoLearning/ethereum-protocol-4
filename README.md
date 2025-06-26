@@ -1,23 +1,30 @@
-# EPF Mandarin Group - 第四期
+# 以太坊底层协议残酷共学 第四期
 
 ## 介绍
 
-[EPF（Ethereum Protocol Fellowship）](https://github.com/eth-protocol-fellows/cohort-five/blob/main/program-guide/program-details.md) 是由 EF 发起并资助的奖学金计划，每年一期，旨在从社区中遴选出 20 至 30 名优秀开发者参与。在奖学金计划期间，EF 提供导师指导和资金支持，帮助开发者迅速掌握以太坊协议层及客户端相关知识。通常，EPF 的报名在每年 4-5 月左右开启，经过大约半年的实践开发，最终在 11 月底的 Devcon/Devconnect 大会上展示成果。
+以太坊协议层是区块链技术的核心组成部分，它定义了网络如何达成共识、如何验证交易、如何维护状态等关键机制。本次残酷共学将深入探讨以太坊协议层的各个方面，包括但不限于：
 
-自去年起，EPF 增设了 [EPFsg（EPF Study Group）](https://epf.wiki/#/eps/intro) 教学计划，旨在吸引更多开发者提前学习相关知识，并同时推出了 [epf.wiki](https://epf.wiki/#/) 这一优秀学习资源。今年，EPFsg 与 EPF 均将启动。为此，我们发起了本次“残酷共学”活动，希望大家能迅速回顾相关资料，为今年 EPFsg 的入学做好充分准备，之后一同进步，共同学习。
+- 共识机制：从 PoW 到 PoS 的演进
+- 网络协议：P2P 网络、节点发现、区块同步
+- 状态管理：账户模型、状态树、存储结构
+- 交易处理：交易池、Gas 机制、执行引擎
+- 分片技术：数据可用性、跨分片通信
+- 密码学基础：签名算法、哈希函数、零知识证明
 
 通过本次残酷共学，你将收获对于以太坊协议层（包括但不限于共识算法、网络运行等）非常深入的理解，也将获得跟以太坊协议层核心开发者、华语区 EPF Fellow 与资深开发的直接交流机会！
 
+本次共学也作为 EPF 中文小组的一个活动。[EPF（Ethereum Protocol Fellowship）](https://github.com/eth-protocol-fellows/cohort-five/blob/main/program-guide/program-details.md) 是由 EF 发起并资助的奖学金计划，每年一期，旨在从社区中遴选出 20 至 30 名优秀开发者参与。在奖学金计划期间，EF 提供导师指导和资金支持，帮助开发者迅速掌握以太坊协议层及客户端相关知识。通常，EPF 的报名在每年 4-5 月左右开启，经过大约半年的实践开发，最终在 11 月底的 Devcon/Devconnect 大会上展示成果。我们的学习素材和节奏，将会跟随 EPF 的进展一起。
 
 ## 关键词
 
-Ethereum, Protocol, 以太坊底层协议
+Ethereum, Protocol, 以太坊底层协议, EPF
 
 ## 面向人群
 
 - 对以太坊底层协议概念及概览有一定了解的学生、研究员或开发者
 - 有意申请并参加 EPFsg 和 EPF，希望为以太坊协议层做出贡献的朋友
-- 最好具备一定的编程基础，因为本课程涉及一定技术深度，方便理解
+- 最好具备一定的编程基础，因为本课程涉及一定技术深度
+- 对 Dapp 和以太坊开发感兴趣的朋友，包括一些基础知识
 
 ## 报名时间
 
@@ -31,10 +38,11 @@ Ethereum, Protocol, 以太坊底层协议
 
 ## 发起人
 
-- 姓名：Raymond
-- GitHub ID：puruiwen
-- Telegram：puruiwen
-- Email：buruiwen@gmail.com
+- 姓名：Bruce Xu
+- GitHub ID：brucexu-eth
+- Telegram：brucexu_eth
+- Email：brucex2710@gmail.com
+- 助教：Echo
 
 ## 发起组织
 
@@ -48,16 +56,67 @@ Ethereum, Protocol, 以太坊底层协议
 
 Telegram：https://t.me/ETHPandaOrg/5427
 
-### 每周协议相关技术分享会
-- 华语区 Fellow 及资深开发技术分享
-  - 每周四周会，EPF 残酷共学将邀请往期 EPF Fellow 及底层协议核心开发进行技术和经验分享
+## 学习资料/课程安排
+
+学习方式主要以自学每天打卡，每周我们会设置一个周会，方便大家交流、答疑，也会邀请相关专家来做分享。
+
 ### 学习资料
-  - 主要围绕 EPF wiki 及官网安排：https://epf.wiki/#/eps/intro
+
+#### 核心资料
+
+- EPFsg Wiki 及官网：<https://epf.wiki/#/> 中文版本（由 ETHPanda 社区翻译）：<https://zh.epf.wiki/#/>
+- [Ethereum.org](https://ethereum.org/) 官方文档
+
+Vitalik 的协议系列文章：
+
+- [Possible futures of the Ethereum protocol, part 1: The Merge](https://vitalik.eth.limo/general/2024/10/14/futures1.html) | [中文翻译](https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293318&idx=1&sn=de61234513ee58e091a4fd04e4f5927f&scene=21#wechat_redirect)
+- [Possible futures of the Ethereum protocol, part 2: The Surge](https://vitalik.eth.limo/general/2024/10/17/futures2.html) | [中文翻译](https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293546&idx=1&sn=4170dca0fac69556c3e46539867bfeb7&scene=21#wechat_redirect)
+- [Possible futures of the Ethereum protocol, part 3: The Scourge](https://vitalik.eth.limo/general/2024/10/20/futures3.html) | [中文翻译](https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293588&idx=1&sn=c9ef3a890934cbbc9a4a6f78407aef03&scene=21#wechat_redirect)
+- [Possible futures of the Ethereum protocol, part 4: The Verge](https://vitalik.eth.limo/general/2024/10/23/futures4.html) | [中文翻译](https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293705&idx=1&sn=7cc3650946fd73453170b2a62d8630c3&scene=21#wechat_redirect)
+- [Possible futures of the Ethereum protocol, part 5: The Purge](https://vitalik.eth.limo/general/2024/10/26/futures5.html) | [中文翻译](https://mp.weixin.qq.com/s?__biz=MzI2NzExNTczMw==&mid=2653293868&idx=1&sn=8aaea12f3c659de616b995ebed4f85f8&scene=21&poc_token=HMxbS2ijcoqoJhWgC0lmFtA2oj2BVQr_XNg2B9kF)
+- [Possible futures of the Ethereum protocol, part 6: The Splurge](https://vitalik.eth.limo/general/2024/10/29/futures6.html) | [中文翻译](https://mp.weixin.qq.com/s/aeWLSl2No8A3oSdZp2no3g)
+
+EPF 的官方学习资料和进展：
+
+我们会将 EPF 官方的学习资料和计划及时同步在这里。
+
+#### 扩展技术文档
+
+- [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf) - 以太坊黄皮书
+- [Ethereum 2.0 Specifications](https://github.com/ethereum/consensus-specs) - 以太坊 2.0 规范
+- [Ethereum Execution Layer Specs](https://github.com/ethereum/execution-specs) - 执行层规范
+
+#### 客户端实现
+
+- [Geth](https://github.com/ethereum/go-ethereum) - Go 语言的客户端实现
+  - [Geth 源码系列 I：Geth 整体架构](https://forum.lxdao.io/t/geth-i-geth/2856)
+  - [Geth 源码系列 II：存储设计及实现](https://forum.lxdao.io/t/geth-ii/2857)
+  - [Geth 源码系列 III：p2p 网络设计及实现](https://forum.lxdao.io/t/geth-iii-p2p/2891)
+  - Geth 源码系列正在连载中，将会及时更新
+
+### 每周协议相关技术分享会
+
+每周四晚上北京时间 7 点到 8 点我们会开设一个在线周会：
+
+Topic: 以太坊底层协议残酷共学周会 | ETHPanda
+
+Download ICS: https://us06web.zoom.us/meeting/tZ0qcu6gqDMsGtGDtG_T40zT1dtfgraB5YW0/ics?icsToken=DJAYOl_c3IewPXRIYwAALAAAAHp06FAnvcicucaTsbqik0eE_3DeQegXjSq9J1a0TeyWHg9Daarl5p_ehum7ho1EimC0mEO8khe0sjiprzAwMDAwMQ&meetingMasterEventId=4NPP49XuR9KU68ngQD9dYA
+
+Join Zoom Meeting
+https://us06web.zoom.us/j/89757868605?pwd=dIbMquOGLedKul6E7CtsML8HmpzPiM.1
+
+Meeting ID: 897 5786 8605
+Passcode: 955074
+
+内容包括：
+
+- 学员笔记分享，最近问题交流
+- 华语区 Fellow 及资深开发技术分享
+- 结识更多朋友
 
 ## 共学激励
 
 我们认为学习到知识就是最大的财富，希望报名的同学以深入学习以太坊知识为首要目标。
-
 
 ## 报名和打卡规则
 
@@ -91,7 +150,125 @@ Telegram：https://t.me/ETHPandaOrg/5427
 <!-- START_COMMIT_TABLE -->
 | Name | 6.16 | 6.17 | 6.18 | 6.19 | 6.20 | 6.21 | 6.22 | 6.23 | 6.24 | 6.25 | 6.26 | 6.27 | 6.28 | 6.29 | 6.30 | 7.01 | 7.02 | 7.03 | 7.04 | 7.05 | 7.06 | 7.07 | 7.08 | 7.09 | 7.10 | 7.11 |
 | ------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| [brucexu-eth](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/brucexu-eth.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ✅ | ✅ | ✅ |   | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [aliceyzhsu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/aliceyzhsu.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ✅ | ⭕️ |   | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [Juktong](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Juktong.md) | ⭕️ | ✅ | ✅ | ✅ | ⭕️ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ |   | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [rockyfang](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/rockyfang.md) | ⭕️ | ✅ | ✅ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | |
+| [EchoZheng2333](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/EchoZheng2333.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |   | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [jitash](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/jitash.md) | ⭕️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ✅ | ✅ | ⭕️ |   | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [MrWynn](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/MrWynn.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | |
+| [OrionWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/OrionWu.md) | ✅ | ✅ | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | |
+| [chesley666](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/chesley666.md) | ✅ | ⭕️ | ✅ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | |
+| [ohko4711](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/ohko4711.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | |
+| [fffuuuming](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/fffuuuming.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ⭕️ | ✅ | ✅ | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [qingoba](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/qingoba.md) | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | | | |
+| [kuove](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/kuove.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ✅ | ✅ | ✅ | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [big-dudu-mosty](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/big-dudu-mosty.md) | ✅ | ⭕️ | ✅ | ✅ | ⭕️ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ |   | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [Bo](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Bo.md) | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ⭕️ | ⭕️ | ✅ | ✅ | | | | |   |   |   |   |   |   |   |   |   |   |   |
+| [0xAlexWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/0xAlexWu.md) | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | | | |
 <!-- END_COMMIT_TABLE -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
