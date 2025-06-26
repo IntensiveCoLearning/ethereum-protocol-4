@@ -110,4 +110,17 @@ Today, I started reading the Purge, which is about reducing data storage burden 
 ### 2025.06.23
 請假
 
+### 2025.06.25
+In The Purge, Vitalik addresses the growing complexity and data storage burden on Ethereum. He proposes ways to preserve the permanence of critical on-chain data while significantly reducing its overall size.
+
+First, he introduces history expiry, which limits long historical data to most nodes—typically about a year. A torrent-like network would be used for archiving, reducing the burden on each node while preserving data permanence.
+
+Second, he explores state expiry, focusing on two main approaches. Partial state expiry would archive rarely accessed data, allowing it to be restored when needed. Address-period-based expiry would eliminate indefinite state growth by requiring periodic renewal of address state, though this would entail changes to the current address format.
+
+Lastly, Vitalik also talks about the removing and reforming outdated and complex features including transitioning from RLP to SSZ for data serialization, removing old transaction types, reforming the log system, removing the beacon chain sync committee.
+
+
+
+
+
 <!-- Content_END -->
