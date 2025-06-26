@@ -107,4 +107,7 @@ There are two main approaches to achieving The Verge's goals: Verkle Trees and S
 #### The Purge
 Today, I started reading the Purge, which is about reducing data storage burden on clients whileing preserving ETH's permanence of on-chain data. However, I haven't finished reading this passage. Hence, I'll summarize tmr. 
 
+### 2025.06.23
+請假
+
 <!-- Content_END -->

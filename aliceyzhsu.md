@@ -266,4 +266,90 @@ type Ethereum struct {
 
 - 实战教程: [goethereumbook](https://goethereumbook.org/en/)
 
+### 2025.06.24
+---
+#### 📗Effective Go
+今天学习 [Effective Go](https://go.dev/doc/effective_go#commentary)，为 Geth 实战打好语言基础
+
+#### 📗Basic
+- go有一个default的官方指定的程序化的格式调整工具 `gofmt`，每次 `CTRL + s` 保存的时候会自动调整格式为理想格式，主要优化缩进和空格
+- 命名惯例
+	- 变量、函数都用驼峰命名法，首字母小写
+	- 要export的函数，首字母大写
+- 非常适用于高性能分布式系统，提供了很多并行的支持，适合开发游戏服务端等
+- 第一行为`package <pkg_name>`，指定该文件属于哪个包
+	- 每个Go程序都必须有一个main包
+	- 按照约定，包名与导入路径的最后一个元素一致。例如，"math/rand" 包中的源码均以 package rand 语句开始
+- import 来引入包
+	- Go中，如果被import的包没有被调用，编译器是会报错的
+	- 也可以用分组的形式导入
+	``` go
+	import (
+		"fmt"
+		"math"
+	)
+	```
+- 大写字母开头的函数、变量等，是可以导出包外的，相当于public；小写开头的则只在包内可见，相当于protected
+	- 所以说调用包的方法和变量时，其名字一定是大写打头的
+- **不需要分号结尾**，同python
+- 变量都由关键字`var`声明
+	- 可以在变量名后显式地声明变量类型 `var a string = "Go"`
+	- 也可以用 `:=` 来直接声明变量
+	- go中的自动类型推断是在编译时进行的，而python是在运行时进行的
+		- 函数外的每个语句都必须以关键字开始（var、func 等），因此`:=`结构不能在函数外使用。
+	- 可以同时在一行为多个不同类型的变量赋值：`var c, python, java = true, false, "no!"`
+- `const` 用来声明常量，有了const就不用再var了
+	``` go
+	const (
+		a = iota  // 0
+		b         // 1
+		c         // 2
+		d = 5     // 5
+		e         // 5
+	)
+	```
+	- `iota` 从0开始，每过一行自增1，到下一个硬编码的变量时中止
+	- 中止之后，未被赋值的变量默认等于上一个变量的值
+- 可以一行声明和初始化多个变量
+- `func`来声明函数：`func function_name( [parameter list] ) [return_types]`
+	- 函数可以返回任意数量的返回值
+	- 可以在函数定义中声明返回值的名字 `func split(sum int) (x, y int) {}`
+- go中也有类似c的指针，但是没有指针运算
+	- 结构体的指针也可以直接用点号 `.` 来取成员
+- go没有类，但是可以为类型定义方法
+	- `func (s *Stack) Push(item int)` 函数名之前指定类名和类指针变量名，来为类型实现方法
+- 局部变量在声明之后必须被用到，否则会报编译错误
+- 可以同时赋值 `a, b = b, a`
+- `make()`只用于创建三种对象：channel, slice, map
+	- make返回对象的引用，new返回指针
+	- `make([]int, len)` 来创建一个长度为len的数组（自动初始化为0）
+- go主要就是玩slice
+- go没有tuple
+
+#### 📗Syntax
+- go中没有前置自增运算符 (`++i`)，但是有后置的 (`i++`)
+	- 不过go中的自增是没有返回值的，也就是不能用自增表达式给别人赋值
+- if语句的条件不需要用括号括起来，类似于rust
+- 和 for 一样，if 语句可以在条件表达式前执行一个简短语句。 `if v := math.Pow(x, n); v < lim {}`
+	- 在这个简短语句中声明的变量在整个if和else语句块中都可见
+- for语句条件与c类似，只是不用括号
+	- `for idx, char := range str {}` 用`:=`
+	- range返回的是一个**enumerate**，如果第一个值默认被赋值为idx
+	- 所以想要实际的值，而不是index的话，需要用`_`接收掉index：`for _, val := range arr {}`
+- for后面可以只包括条件语句，这时for与c中的while相等 `for i < 100 {}`
+- 也可以什么都不带，这时等于rust中的loop `for {}`
+- `defer` 推迟，go特有的关键字，表示把后面的语句放在当前函数返回之后再执行
+	- 推迟调用的函数被压入栈中，调用时先进后出
+	- 用来关闭文件、释放锁很方便 
+	``` go
+	file, _ = os.Open(path)
+	defer func(){file.Close()}
+	```
+- 定义函数时，在`func`和函数名之间可以有一个接收者Receiver：`func (h IntHeap) Len() int`
+	- 接收者可以是值接收者(value receiver)或指针接收者(pointer receiver)
+	- 值接收者时，函数中h是原来的h的一个clone，在函数中，如果有人在其他地方改了h，不会影响这个函数，适合不改变该对象的值的函数
+	- 指针接收者时，函数中h就是原来的h的指针，对`*h`的修改会更改原本的值
+
+> <END_OF_TODAY>
+
 <!-- Content_END -->
