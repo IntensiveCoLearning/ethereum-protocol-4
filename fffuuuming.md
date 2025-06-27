@@ -482,4 +482,19 @@ What's next ?
 - **Simple enough implementation**: complex crypto bloats the protocol
 - **Quantum-resistant**
 - General-purpose ZK infrastructure or use P2P-layer mitigations instead.
+### 2025.06.27
+[Possible futures of the Ethereum protocol, part 1: The Merge](https://vitalik.eth.limo/general/2024/10/14/futures1.html#1)
+---
+#### Faster Transaction Confirmations
+L1 and rollups benefit from faster confirmation, so we want **4-second slot time** or **instant pre-confirmations**.
+- **Reduce slot times**
+    - Since **finality inherently takes three rounds of communication** (justification & finalization ?), so we can **make each round of communication be a separate block**, which would after 4 seconds get at least a preliminary confirmation.
+    - increases geographic latency pressure → centralization
+- **Pre-confirmations**
+    - Depends on **APS** (attester-proposer separation) (e..g [execution tickets](https://www.ephema.io/blog/beyond-the-stars-an-introduction-to-execution-tickets-on-ethereum)): proposer broadcasts transactions + confirms them in real-time, attesters validate order
+    - Only improves best-case UX, not worst-case
+    - how to incentivize pre-confirmations ?
+        - Proposers have an incentive to maximize their optionality as long as possibl
+        - Attesters go from “vote yes/no on this block” to “analyze block metadata and timestamp guarantees.”
+
 <!-- Content_END -->
