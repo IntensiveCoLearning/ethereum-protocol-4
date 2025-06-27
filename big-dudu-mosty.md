@@ -354,5 +354,84 @@ EIP-7623：限制最大调用数据量，缓解资源浪费
 经济模型完善：EIP-1559 改进提升资源利用效率
 长期技术储备：VDF 与前沿密码学为 5-10 年后的技术突破铺路
 
+### 2025.06.27
+以太坊执行层学习笔记：从架构到源码实践
+一、执行层核心定位与架构概述
+1. 状态机本质
+   以太坊执行层是一个交易驱动的状态机，核心职能是通过 EVM 执行交易来更新链上状态（账户余额、合约数据等），并通过 P2P 网络与其他节点同步数据。
+2. 合并（The Merge）后的分层架构
+   执行层：负责交易执行、状态维护（如 Geth、Erigon）。
+   共识层：负责区块共识（如 Prysm、Lighthouse）。
+   通信方式：通过Engine API交互，执行层接收共识层的区块生成 / 验证指令。
+二、执行层核心模块与源码结构
+1. 三大基础组件
+   网络（devp2p）
+    实现节点发现（Kademlia 算法）和数据传输，源码在p2p/模块
+    核心结构：enode.Node（节点信息）、discover.Table（节点发现表）
+   计算（EVM）
+     状态转换的唯一入口，源码在core/vm/
+     关键结构：
+        EVM：执行上下文（区块 / 交易信息、状态数据库）
+        EVMInterpreter：指令解释器（处理 OpCode 执行）
+        Contract：合约调用参数（调用者、输入数据、Gas）
+   存储（ethdb）
+       抽象底层数据库接口（LevelDB/Pebble），源码在ethdb/
+   上层管理：
+   rawdb：区块数据读写
+   statedb：MPT 状态树管理
+2. Geth 源码核心模块表
+模块路径	功能描述
+
+core/	区块链核心逻辑（区块管理、状态机、Gas 计算）
+
+eth/	以太坊协议实现（区块同步、交易广播、Engine API）
+
+node/	节点容器，管理组件生命周期（如 Ethereum 实例、RPC 服务）
+
+p2p/	P2P 网络协议（节点发现、数据传输）
+
+trie/	Merkle Patricia Trie 实现，用于存储账户状态和合约数据
+
+三、执行层关键流程解析
+1. 节点同步流程
+   Full Sync
+   从创世区块开始下载并验证所有区块，通过 EVM 重建状态数据库.
+   Snap Sync
+   直接下载最新检查点状态和后续区块，跳过全量验证，提升同步效率。
+2. 区块处理核心流程
+   共识层触发：通过Engine API通知执行层生成新区块
+   交易池打包：从交易池获取待执行交易，通过 EVM 执行并更新状态
+   区块验证：执行层验证共识层提交的区块，确保交易执行结果正确
+3. 核心数据结构
+   Ethereum（eth/backend.go）
+   ![image](https://github.com/user-attachments/assets/8b070fc0-4f6d-4326-aefe-c65b2c6d72ea)
+   Node（node/node.go）
+   ![image](https://github.com/user-attachments/assets/942bd892-15aa-48af-ab4b-2f50d88c531a)
+4.Geth 节点启动流程
+  1. 初始化阶段（核心步骤）
+     加载配置：创建Node实例，初始化 RPC 服务、账户管理、P2P 网络
+     初始化 Ethereum：
+        创建ethdb数据库，实例化共识引擎（验证共识层结果），初始化区块链（core.BlockChain）和交易池。
+     注册协议与 API：
+        子协议（eth/68、snap），Engine API（执行层与共识层通信）
+   2. 启动阶段
+      
+   ![image](https://github.com/user-attachments/assets/5b47c9df-d724-4bef-915a-1b4df2674811)
+
+五、执行层核心功能总结
+  1. 交易执行机制
+     唯一通过 EVM 修改状态的方式
+     最佳实践：遵循CEI 模式（检查 - 效果 - 交互）防止重入攻击
+  2. 状态存储方案
+     MPT 树：高效存储账户 / 合约数据，支持快速哈希验证
+     分层存储：ethdb抽象底层数据库，statedb管理 MPT 树状态
+  3. 网络通信架构
+     devp2p 协议：
+       节点发现：基于 Kademlia 算法的分布式哈希表
+       数据传输：支持eth/68（核心协议）和snap（快速同步）
+     去中心化同步：新节点通过 P2P 网络从多个节点获取区块 / 状态
+
+
+
 
 <!-- Content_END -->
