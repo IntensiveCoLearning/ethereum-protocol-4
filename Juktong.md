@@ -119,8 +119,16 @@ Second, he explores state expiry, focusing on two main approaches. Partial state
 
 Lastly, Vitalik also talks about the removing and reforming outdated and complex features including transitioning from RLP to SSZ for data serialization, removing old transaction types, reforming the log system, removing the beacon chain sync committee.
 
+### 2025.06.26
+The Splurge is the part that is critical but hard to categorize upgrades. In the passage, Vitalik discusses the following updates.
 
+First, since the current EVM is hard to analyze, inefficient, and inflexible. It would be a good idea to introduce a modular strucrture separating code from data, removing dynamic jumps, and enabling subroutines called EMV Object Format (EOF).
 
+Second, since the current Ethereum only supports ECDSA signature-based accounts, account abstraction would make the net more flexible and secure.
+
+Third, (I'll read the multidimensional gas part again tmr. Did not fully understand)
+
+Lastly, the author discusses the ZK-SNARKs providing private and efficient proofs, FHE providing data processing without revealing, Indistinguishability Obfuscation encrypting programs where logic is hidden but still executable. In addition, in the future Quantum One-Short Signature may also be applied.
 
 
 <!-- Content_END -->
