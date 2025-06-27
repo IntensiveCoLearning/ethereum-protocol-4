@@ -610,6 +610,35 @@ EVM 第一次读取某个地址时，StateDB 会从Trie→TrieDB→EthDB数据�
 当所有交易都执行完毕后，StateDB.Commit() 被调用。在这之前，状态树Trie实际上还未被更改。直到这一步，StateDB 才会将内存中的状态变更写入存储 Trie，计算出每个账户的最终 storage root，从而生成账户的最终状态。接下来，所有“脏”的状态对象会被写入 Trie中，更新其结构并计算新的 stateRoot。
 最后，这些更新后的节点会被传递给 TrieDB，它会根据不同的后端（PathDB/HashDB）缓存这些节点，并最终将它们持久化到磁盘（LevelDB/PebbleDB）——前提是这些数据没有因为链重组被丢弃。
 ```
+### 2025.06.26
+##### State.Database
+
+state.Database 是 Geth 中连接 StateDB 与底层数据库（EthDB 与 TrieDB）的重要中间层，它为状态访问提供了一组简洁的接口和实用方法。虽然它的接口比较薄，但在源码中，它扮演了多个关键角色，尤其是在状态树访问与优化方面。
+
+在 Geth 源码中（core/state/database.go），state.Database 接口由 state.cachingDB 这一具体数据结构实现。它的主要作用包括：
+
+**提供统一的状态访问接口**
+state.Database 是构建 StateDB 的必要依赖，它封装了打开账户 Trie 和存储 Trie 的逻辑，例如：
+
+    ```
+    func (db *cachingDB) OpenTrie(root common.Hash) (Trie, error)
+    func (db *cachingDB) OpenStorageTrie(stateRoot common.Hash, address common.Address, root common.Hash, trie Trie) (Trie, error)
+    ```
+这些方法隐藏了底层 TrieDB 的复杂性，开发者在构建某个区块的状态时，只需调用这些方法获取正确的 Trie 实例，而不必直接操作 hash 路径、trie 编码或底层数据库。
+**暂存和复用合约代码（code cache）**
+合约代码的访问代价较高，且往往在多个块中重复使用。为此，state.Database 中实现了代码缓存逻辑，避免重复从磁盘加载合约字节码。这一优化对提高区块执行效率至关重要：
+
+```
+func (db *CachingDB) ContractCodeWithPrefix(address common.Address, codeHash common.Hash) []byte
+```
+
+这个接口允许按地址和代码哈希快速命中缓存，若未命中才回退到底层数据库加载。
+
+**长生命周期，跨多个区块复用**
+与 StateDB 的生命周期仅限于单个区块不同，state.Database 的生命周期和整个链（core.Blockchain）保持一致。它在节点启动时构造，并贯穿整个运行周期，作为 StateDB 的“忠实伙伴”，为其在每个区块处理时提供支持。
+
+**为未来的 Verkle Tree 迁移做准备**
+虽然当前 state.Database 看似只是“代码缓存+trie访问封装”，但它在 Geth 架构中的定位非常前瞻性。一旦未来的状态结构切换至 Verkle Trie，它将成为迁移过程的核心组件：处理新旧结构之间的桥接状态。
 
 
 <!-- Content_END -->
