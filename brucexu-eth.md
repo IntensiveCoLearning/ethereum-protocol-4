@@ -799,4 +799,31 @@ L2 的 rollup 的终极目标是 Native Rollups，就是直接在 L1 上面运�
 
 假设 L1 是 macOS，那么 L2 就是应用。macOS 并不知道应用具体做了什么，应用也只能将优先的信息和数据存储在操作系统。Native Rollup 是 macOS 的虚拟机，L2 相当于创建了一个虚拟机，有更高的权限，可以访问更多的资源。很多基础的底层的逻辑，会被统一，这样 Rollup 就作为协议层的一等公民，被加入到主协议里面。
 
+# 2025.06.27
+
+## https://vitalik.eth.limo/general/2024/10/20/futures3.html
+
+这一个路线是关于 PoS 中心化的问题。主要会产生两个问题：
+
+1. block 出块的问题：侧重于算力、算法优势（MEV 提取）
+2. staking 资产的问题：侧重于资金规模优势，锁定最多的 ETH
+
+核心目标：
+
+- 最小化 Ethereum staking layer 的中心化风险（MEV、staking pools）
+- Minimize risks of excessive value extraction from users
+
+## Fixing the block construction pipeline
+
+Block construction is largely done through extra-protocol propser-builder separation with MEVBoost.
+
+MEV extraction: use specialized algorithms to determine which transactions to includes, in order to maximize the value.
+
+- PBS: proposer-builder separation, validators still propose blocks, but receive the payload from builders
+- APS: attester-proposer separation, the entire slot becomes the builders' responsibility. Preferred.
+
+The separation of powers helps keep validators decentralized.
+
+A sandwich attack could cause users making token swaps to suffer significant losses from slippage.
+
 <!-- Content_END -->
