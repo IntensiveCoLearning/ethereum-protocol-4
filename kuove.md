@@ -640,5 +640,83 @@ func (db *CachingDB) ContractCodeWithPrefix(address common.Address, codeHash com
 **为未来的 Verkle Tree 迁移做准备**
 虽然当前 state.Database 看似只是“代码缓存+trie访问封装”，但它在 Geth 架构中的定位非常前瞻性。一旦未来的状态结构切换至 Verkle Trie，它将成为迁移过程的核心组件：处理新旧结构之间的桥接状态。
 
+### 2025.06.27
+##### Trie
+在 Geth 中，状态树Trie（Merkle Patricia Trie）本身并不存储数据，但 Trie 承担计算状态根哈希和收集修改节点的核心职责，并起到衔接 StateDB与底层存储之间的桥梁作用，是以太坊状态系统的中枢结构。
+
+当 EVM 执行交易或调用合约时，并不会直接操作底层的数据库，而是通过 StateDB 间接与 Trie交互。Trie接收账户地址和存储槽位的查询与更新请求，并在内存中构建状态变化路径。这些路径最终通过递归哈希运算，自底向上生成新的根哈希（state root），这个根哈希是当前世界状态的唯一标识，并被写入区块头中，确保状态的完整性和可验证性。
+
+在一个区块执行完毕并进入提交阶段（StateDB.Commit），Trie会将所有修改过的节点“塌缩”为一个必要的子集，并传递给 TrieDB，由其进一步交由后端的节点数据库（如 HashDB 或 PathDB）持久化。由于 Trie节点以结构化形式编码，它既支持高效读取，也使得状态在不同节点之间可以安全地同步和验证。因此，Trie 不只是一个状态容器，更是连接上层 EVM 与底层存储引擎的纽带，使得以太坊状态具备一致性、安全性和模块化可扩展性。
+
+源码中，Trie主要定位于 trie/trie.go中, 它提供了如下核心接口:
+
+```
+type Trie interface {
+	GetKey([]byte) []byte
+	GetAccount(address common.Address) (*types.StateAccount, error)
+	GetStorage(addr common.Address, key []byte) ([]byte, error)
+	UpdateAccount(address common.Address, account *types.StateAccount, codeLen int) error
+	UpdateStorage(addr common.Address, key, value []byte) error
+	DeleteAccount(address common.Address) error
+	DeleteStorage(addr common.Address, key []byte) error
+	UpdateContractCode(address common.Address, codeHash common.Hash, code []byte) error
+	Hash() common.Hash
+	Commit(collectLeaf bool) (common.Hash, *trienode.NodeSet)
+	Witness() map[string]struct{}
+	NodeIterator(startKey []byte) (trie.NodeIterator, error)
+	Prove(key []byte, proofDb ethdb.KeyValueWriter) error
+	IsVerkle() bool
+}
+```
+
+以节点查询trie.get为例，它会根据节点类型递归地查找账户或合约存储对应的节点，查找时间复杂度是log(n)，n为路径深度。
+
+```
+func (t *Trie) get(origNode node, key []byte, pos int) (value []byte, newnode node, didResolve bool, err error) {
+	switch n := (origNode).(type) {
+	case nil:
+		return nil, nil, false, nil
+	case valueNode:
+		return n, n, false, nil
+	case *shortNode:
+		if !bytes.HasPrefix(key[pos:], n.Key) {
+			// key not found in trie
+			return nil, n, false, nil
+		}
+		value, newnode, didResolve, err = t.get(n.Val, key, pos+len(n.Key))
+		if err == nil && didResolve {
+			n.Val = newnode
+		}
+		return value, n, didResolve, err
+	case *fullNode:
+		value, newnode, didResolve, err = t.get(n.Children[key[pos]], key, pos+1)
+		if err == nil && didResolve {
+			n.Children[key[pos]] = newnode
+		}
+		return value, n, didResolve, err
+	case hashNode:
+		child, err := t.resolveAndTrack(n, key[:pos])
+		if err != nil {
+			return nil, n, true, err
+		}
+		value, newnode, _, err := t.get(child, key, pos)
+		return value, newnode, true, err
+	default:
+		panic(fmt.Sprintf("%T: invalid node: %v", origNode, origNode))
+	}
+}
+```
+
+##### TrieDB
+TrieDB 是Trie与磁盘存储之间的中间层，专注于 Trie 节点的存取与持久化。每一个 Trie 节点（无论是账户信息还是合约的存储槽）最终都会通过 TrieDB进行读写。
+
+程序启动时会创建一个 TrieDB 实例，在节点关闭时会被销毁。它在初始化时需要传入一个 EthDB 实例，EthDB实例负责具体的数据持久化操作。
+
+目前，Geth 支持两种 TrieDB 后端实现：
+
+    HashDB：传统方式，以哈希为键。
+    PathDB：新引入的 Path-based 模型（Geth 1.14.0版本后默认配置），以路径信息作为键，优化了更新与修剪性能。
+    源码中，TrieDB 主要位于triedb/database.go。
+
 
 <!-- Content_END -->

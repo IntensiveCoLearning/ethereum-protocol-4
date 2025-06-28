@@ -130,5 +130,6 @@ Third, (I'll read the multidimensional gas part again tmr. Did not fully underst
 
 Lastly, the author discusses the ZK-SNARKs providing private and efficient proofs, FHE providing data processing without revealing, Indistinguishability Obfuscation encrypting programs where logic is hidden but still executable. In addition, in the future Quantum One-Short Signature may also be applied.
 
-
+### 2025.06.27
+Kind of a easy day for me, just summarize the idea of multimensional gas. Currently, MG only supports execution and blobs. In the future, calldata, state reads/writes, and state size expansion will also be supported.
 <!-- Content_END -->
