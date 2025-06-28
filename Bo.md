@@ -44,4 +44,8 @@ https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/POS.md
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/ForkChoice.md
 ### 2025.06.26
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/EngineAPI.md
+### 2025.06.27
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/JsonRPC.md
+### 2025.06.28
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/Miner.md
 <!-- Content_END -->
