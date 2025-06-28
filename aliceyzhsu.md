@@ -531,7 +531,7 @@ type Ethereum struct {
 - `util.IsValidAddress("0x323...29d")`
 > <END_OF_TODAY>
 
-### 2025.06.26
+### 2025.06.28
 #### 📗Geth
 - [abigen](https://geth.ethereum.org/docs/tools/abigen)：要更好地与合约交互，我们必须生成一个该合约的 **go binding**，而这就需要 `abigen` 这个工具的帮助，和合约本身的 `abi.json`
 	- `abigen --abi abi/Storage.json --pkg storage --type Storage --out contracts/Storage.go`
