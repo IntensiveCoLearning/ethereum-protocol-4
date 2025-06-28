@@ -826,4 +826,38 @@ The separation of powers helps keep validators decentralized.
 
 A sandwich attack could cause users making token swaps to suffer significant losses from slippage.
 
+# 2025.06.28
+
+For fixing the block construction issue, we can break down the block production task: proposer chooses the transactions, and the builder can only choose the ordering and insert some txs of their own.
+
+So we have Inclusion List. In short, at time T, staker creates an inclusion list. At time T+1, a block builder creates a block. The block must include every tx in the inclusion list, they can order and add their own txs.
+
+FOCIL: Fork-choice-enforced inclusion lists proposals involve a committee of multiple inclusion list creators per block.
+
+Single Inclusion List Creator → Easy to Censor
+├── 1 proposer creates inclusion list
+├── If proposer is malicious/bribed → transaction gets censored
+└── Single point of failure
+
+FOCIL solution:
+
+Multiple Inclusion List Creators (Committee) → Censorship Resistant
+├── k inclusion list creators (e.g., k=16)
+├── Each creator independently decides which txs to include
+├── Final inclusion list = UNION of all k lists
+└── To censor: ALL k creators must collude (much harder)
+
+FOCIL + APS：
+
+Time T: Committee creates inclusion lists
+├── 16 validators each create inclusion list
+├── Lists aggregated into master inclusion list
+└── Master list committed to fork choice
+
+Time T+1: Auction-based block building
+├── Builder auction determines final proposer
+├── Winner MUST include all txs from master inclusion list
+├── Winner CAN reorder txs and add new ones
+└── Winner gets MEV extraction rights for additional txs
+
 <!-- Content_END -->
