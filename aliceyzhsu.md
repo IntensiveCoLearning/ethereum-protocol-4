@@ -531,4 +531,82 @@ type Ethereum struct {
 - `util.IsValidAddress("0x323...29d")`
 > <END_OF_TODAY>
 
+### 2025.06.26
+#### 📗Geth
+- [abigen](https://geth.ethereum.org/docs/tools/abigen)：要更好地与合约交互，我们必须生成一个该合约的 **go binding**，而这就需要 `abigen` 这个工具的帮助，和合约本身的 `abi.json`
+	- `abigen --abi abi/Storage.json --pkg storage --type Storage --out contracts/Storage.go`
+- `localhost:8545` 是默认的本地以太坊RPC节点，在 geth 或 foundry 中都是这个
+- **stateOverride**: [docs](https://geth.ethereum.org/docs/interacting-with-geth/rpc/objects#state-override-set) `*map[common.Address]gethclient.OverrideAccount`
+	``` go
+	type OverrideAccount struct {
+	    Nonce uint64
+	    Code []byte
+	    Balance *big.Int
+	    State map[common.Hash]common.Hash
+	    StateDiff map[common.Hash]common.Hash
+	}
+	```
+#### 📗Tracer
+- [callTracer](https://geth.ethereum.org/docs/developers/evm-tracing/built-in-tracers#call-tracer) 
+- [Transaction Call Obj](https://geth.ethereum.org/docs/interacting-with-geth/rpc/objects#transaction-call-object)
+- [Geth traceCall](https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#debugtracecall)
+- [Geth callTracker](https://geth.ethereum.org/docs/developers/evm-tracing/built-in-tracers#call-tracer)
+- 问询服务节点的 node 类型和版本：
+	``` go
+	payload := RPCRequest{
+	    JSONRPC: "2.0",
+	    Method:  "web3_clientVersion",
+	    Params:  []interface{}{},
+		ID:      1,
+	}
+	```
+	
+- 调用 trace 的示例代码:
+	``` go
+	payload := RPCRequest{
+	    JSONRPC: "2.0",
+	    Method:  "debug_traceCall",
+	    Params: []interface{}{
+	        map[string]interface{}{ // Tx Obj
+	            "from":  from,
+	            "to":    to,
+	            "data":  data,
+	            "value": value,
+	            "gas":   gas,
+	        },
+	        blockNum, // hex string
+	        map[string]interface{}{ // TraceConfig
+	            "tracer": "callTracer",
+	            "tracerConfig": map[string]interface{}{
+	                "withLog": true,
+	            },
+	        },
+	    },
+	    ID: 1,
+	}
+	```
+
+![TraceConfig](./img/aliceyzhsu-1.png)
+
+- `TraceConfig` 里面指定 `tracer`，这些 tracer 可以在 [这里面](https://geth.ethereum.org/docs/developers/evm-tracing/built-in-tracers )选 
+	- 里面还有一个 `tracerConfig` 的 dict，它规定的是 `tracer` 的行为，注意区分，这两个是不一样的
+#### 📗Go
+- `go mod` 是 go 目前官方的版本管理工具，它取代了之前的 GOPATH 模式，用 `go.sum` 和 `go.mod` 维护依赖
+	- `go mod init <mod_name>` 来初始化
+	- `go get github.com/ethereum/go-ethereum@latest`
+	- 随时用 `go mod tidy` 来维护依赖
+	- 开启 module 模式之后，不能再用 `./` 等形式导入本地 package，需要用 `<mod_name>/` 来导入本地包 [参考](https://zhuanlan.zhihu.com/p/109828249)
+
+- Go中，如果被import的包没有被调用，编译器是会报错的，可以用下面的方式避免报错
+``` go
+var _ = fmt.Printf  // For debugging; delete when done.
+```
+- 也可以仅为了一个package的 side effects (`init()`的效果) 来 import
+``` go
+import _ "net/http/pprof"
+```
+- `map[string]interface{}` 是用来存 json 或者构造 json 数据时常用的数据结构
+	- `interface{}` 可以接受任何类型的值
+> <END_OF_TODAY>
+
 <!-- Content_END -->
