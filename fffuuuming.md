@@ -496,5 +496,55 @@ L1 and rollups benefit from faster confirmation, so we want **4-second slot time
     - how to incentivize pre-confirmations ?
         - Proposers have an incentive to maximize their optionality as long as possibl
         - Attesters go from “vote yes/no on this block” to “analyze block metadata and timestamp guarantees.”
+[Possible futures of the Ethereum protocol, part 2: The Surge](https://vitalik.eth.limo/general/2024/10/17/futures2.html)
+---
+Previous scaling strategy has two paths to scaling:
+- **Sharding**: Only store a small fraction of the transactions per node (like other p2p such as BitTorrent).
+- **Layer 2**: Separate network built on top of Ethereum,
+    - Offload computation/data From ethereum L1 
+    - Still inherit Ethereum’s security, especially for correctness of transactions and user balances
+    - Evolution: ([State Channel](https://ethereum.org/en/developers/docs/scaling/state-channels) → [Plasma](https://plasma.io/plasma-deprecated.pdf) → [Rollups](https://vitalik.eth.limo/general/2021/01/05/rollup.html)).
 
+By 2019, research breakthroughs in [**verifying "data availability" at scale**](https://github.com/ethereum/research/wiki/A-note-on-data-availability-and-erasure-coding) allowed **Rollups** (which need lots of on-chain data) to thrive, merging both strategies into a rollup-centric roadmap.
+
+Comparison:
+
+
+| L2 Type | Key Idea | Security Guarantee |
+| -------- | -------- | -------- |
+| State channels         | Keep txs off-chain, settle net result on L1         |  Only parties involved        |
+| Plasma         | Off-chain blocks + Merkle roots on L1        |  Exit game for users        |
+| Rollups     | Off-chain exec + full data (or proofs) on L1     | Enforced by Ethereum     |
+
+    
+#### The Surge: Scaling Ethereum with L2s
+![Unknown](https://hackmd.io/_uploads/ryy-FFCNle.png)
+
+- **100,000+ TPS** across L1 + L2
+- Maintain L1’s **decentralization** and **security**
+- Ensure **L2s inherit Ethereum’s trustlessness**
+- Enable **maximum interoperability** among L2s (not fragmented)
+
+#### Scalability Trilemma
+![Unknown1](https://hackmd.io/_uploads/BkvXRiRNee.png)
+
+> Heuristic mathematical argument: if a decentralization-friendly node (eg. consumer laptop) can verify N transactions per second, and you have a chain that processes k*N transactions per second, then either (i) each transaction is only seen by 1/k of nodes, which implies an attacker only needs to corrupt a few nodes to push a bad transaction through, or (ii) your nodes are going to be beefy and your chain not decentralized
+
+Problem: Rollups depend on publishing data to L1, but even with EIP-4844, L1 only supports ~173–607 TPS.
+
+With **SNARKs** + **DAS**, it can make sure that
+- The computation was done correctly ✅ (SNARK)
+- The data used in that computation is available to anyone ✅ (DAS)
+
+| Component | What it solves | How it works |
+| -------- | -------- | -------- |
+| **SNARK**        |  Proves the **correctness of computation**        | Posts a **succinct proof** on-chain that verifies the rollup’s off-chain execution         |
+| **DAS**     | Verifies the **availability of data** used in computation     | Allows light clients to **sample** small random parts of the data and check if it’s available     |
+
+- **SNARKs (Succinct Non-interactive Arguments of Knowledge)**: Cryptographic proofs that
+    - Prove a computation was executed correctly
+    - Tiny in size
+    - Can be verified in milliseconds
+    - **Trustless** (Anyone can verify the proof without trusting the prover.)
+- **DAS (Data Availability Sampling)**: A technique to verify that data posted to L1 is available, **without downloading it all**.
 <!-- Content_END -->
