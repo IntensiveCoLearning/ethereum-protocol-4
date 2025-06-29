@@ -48,4 +48,6 @@ https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/EngineAPI.md
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/JsonRPC.md
 ### 2025.06.28
 https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/Miner.md
+### 2025.06.29
+https://github.com/Bo-00/Ethereum-Protocol-Study/blob/main/Persistence.md
 <!-- Content_END -->
