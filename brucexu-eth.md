@@ -860,4 +860,72 @@ Time T+1: Auction-based block building
 ├── Winner CAN reorder txs and add new ones
 └── Winner gets MEV extraction rights for additional txs
 
+# 2025.06.30
+
+A different approach to the problem is multiple concurrent proposers (MCP) schemes such as BRAID.
+
+MCP works by having k parallel proposers generate lists of transactions, and then using a deterministic algorithm (eg. order by highest-to-lowest fee) to choose the order.
+
+BRAID does not seek to attain the goal of dumb-pipe block proposers running default software being optimal.
+
+- Last-mover arbitrage attacks: Sophisticated proposers who are very well-connected to the network have more ability to do this.
+- Exclusive order flow: users have the incentive to send transactions directly to one single proposer, to minimize their vulnerability to front-running and other attacks. -> centralized issue
+
+In addition to these two extremes, there is a spectrum of possible designs in between.
+
+## Encrypted mempools
+
+Encrypted mempools are a technology where users broadcast their transactions in encrypted form, along with some kind of proof of their validity, and the transactions are included into blocks in encrypted form, without the block builder knowing the contents. The contents of the transactions are revealed later.
+
+The two leading techniques for this are (i) threshold decryption, and (ii) delay encryption, a primitive closely related to verifiable delay functions (VDFs).
+
+Note that the safety of BRAID depends heavily on encrypted mempools; otherwise, the top-of-block auction mechanism becomes vulnerable to strategy-stealing attacks (essentially: copying other people's transactions, swapping the recipient address, and paying a 0.01% higher fee). This need for pre-inclusion privacy is also the reason why enshrined PBS is so tricky to implement.
+
+In particular, the centralization bottlenecks for staking are:
+
+- Block construction centralization (this section)
+- Staking centralization for economic reasons (next section)
+- Staking centralization because of the 32 ETH minimum (solved with Orbit or other techniques; see the post on the Merge)
+- Staking centralization because of hardware requirements (solved in the Verge, with stateless clients and later ZK-EVMs)
+
+Solving any one of the four increases the gains from solving any of the others.
+
+Many block construction pipeline designs end up increasing slot times. It can be worth thinking about the block construction pipelines and single slot finality simultaneously.
+
+## Fixing staking economics
+
+About 30% of the ETH supply is actively staking, and more than enough. If it grows, researchers fear a different scenario: the risks that would arise if almost all ETH becomes staked.
+
+- Staking turns from being a profitable task for specialists into a duty for all ETH holders. 
+- Credibility of the slashing mechanism weakens if almost all ETH is staked
+- A single liquid staking token could take over the bulk of the stake and even taking over "money" network effects from ETH itself
+- Ethereum needlessly issuing an extra ~1m ETH/year. In the case where one liquid staking token gets dominant network effect, a large portion of this value could potentially even get captured by the LST.
+
+If both mass staking and LSTs are unavoidable, embrace them.
+
+Redesign penalties so most staked ETH can be pooled safely.
+
+Keep the truly slashable, security-critical part small and well-distributed.
+
+Two-tier staking, on the other hand, requires setting two return curves: (i) the return rate for "basic" (risk-free or low-risk) staking, and (ii) the premium for risk-bearing staking. There are different ways to set these parameters: for example, if you set a hard parameter that 1/8 of stake is slashable, then market dynamics will determine the premium on the return rate that slashable stake gets.
+
+Another important topic here is MEV capture. Today, revenue from MEV (eg. DEX arbitrage, sandwiching...) goes to proposers, ie. stakers. This is revenue that is completely "opaque" to the protocol: the protocol has no way of knowing if it's 0.01% APR, 1% APR or 20% APR. The existence of this revenue stream is highly inconvenient from multiple angles:
+
+- It is a volatile revenue source, as each individual staker only gets it when they propose a block, which is once every ~4 months today. This creates an incentive to join pools for more stable income.
+- It leads to an unbalanced allocation of incentives: too much for proposing, too little for attesting.
+- It makes stake capping very difficult to implement: even if the "official" return rate is zero, the MEV revenue alone may be enough to drive all ETH holders to stake. 
+
+We can solve these problems by finding a way to make MEV revenue legible to the protocol, and capturing it.
+
+it's widely understood that any mechanism for auctioning off block proposer rights (or, more generally, sufficient authority to capture almost all MEV) ahead of time accomplishes the same goal.
+
+Three ways:
+
+- Do nothing
+- Stake capping (via changing issuance curve)
+- Two-tiered staking
+
+
+
+
 <!-- Content_END -->
