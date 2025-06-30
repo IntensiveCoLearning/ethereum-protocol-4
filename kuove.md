@@ -716,7 +716,53 @@ TrieDB 是Trie与磁盘存储之间的中间层，专注于 Trie 节点的存取
 
     HashDB：传统方式，以哈希为键。
     PathDB：新引入的 Path-based 模型（Geth 1.14.0版本后默认配置），以路径信息作为键，优化了更新与修剪性能。
-    源码中，TrieDB 主要位于triedb/database.go。
+源码中，TrieDB 主要位于triedb/database.go。
 
+### 2025.06.30
+
+###### Trie 节点的读取逻辑
+所有的 TrieDB 后端都必须实现一个 database.Reader 接口，其定义如下：
+```
+type Reader interface {
+    Node(owner common.Hash, path []byte, hash common.Hash) ([]byte, error)
+}
+```
+这个接口提供了基本的节点查询功能，它会根据路径（path）和节点哈希（hash）从 trie 树中定位并返回该节点。注意，返回的是原始字节数组 —— TrieDB 对节点的内容并不关心，也不知道这是不是账户节点、叶子节点还是分支节点（这由上层的Trie来解析）。
+
+接口中的 owner 参数用于区分不同的 trie：
+   &emsp; 如果是账户 trie，则 owner 留空。
+   &emsp; 如果是合约的存储 trie，则 owner 是该合约的地址，因为每个合约都有自己独立的存储 trie。
+换句话说，TrieDB 是底层节点的读写总线，为上层的 Trie提供统一的接口，不涉及语义，只关心路径和哈希。它让 Trie 与物理存储系统之间解耦，使得不同存储模型可以灵活替换而不影响上层逻辑。
+
+###### TrieDB 之 HashDB
+TrieDB历史上采用的节点持久化方式是：
+
+将每个 Trie 节点的哈希（Keccak256）作为键，将该节点的 RLP 编码作为值，并写入底层的 key-value 存储中。这种方式现在被称为HashDB。
+
+这种设计方式非常直接，但有几个显著的优点：
+&emsp;   支持多棵 Trie 并存：只需知道根哈希，就能遍历恢复整个 Trie。每个账户的存储、账户 Trie、不同历史状态的根哈希都可以分别管理。
+&emsp;    子树去重（Subtrie Deduplication）：由于相同的子树具有相同的结构和节点哈希，它们在 HashDB 中会自然共享，不需要重复存储。这对于以太坊的大状态树尤为重要，因为大部分状态在区块之间是保持不变的。
+
+要注意的是，普通的 Geth 节点并不会在每个区块之后将 Trie 完整写入磁盘，这种完整持久化只发生在 “归档模式”（--gcmode archive）下，而大多数主网节点并不使用归档模式。
+那普通模式下，状态是怎么写入磁盘的呢？实际上，状态更新会先缓存在内存中，延迟写入磁盘。这个机制叫做“延迟刷盘”（delayed flush），触发条件包括：
+&emsp; :stopwatch: 定时刷盘：默认每隔 5 分钟（等价于处理完约 5 分钟内的区块）会自动写入一次。
+&emsp;  :floppy_disk: 缓存容量达到上限：当状态缓存填满，必须刷盘释放内存。
+&emsp;  :no_entry: 节点关闭时：为了数据完整性，所有缓存都会刷盘。
+
+尽管 HashDB 的结构设计很简单，但它在内存管理方面非常复杂，特别是 对失效节点的垃圾回收机制：假设某个合约在一个区块被创建，在下一个区块就被销毁 —— 此时与该合约有关的状态节点（包括合约账户和其独立的存储 Trie）都已经没用了，如果不清理，它们会白白占用内存。因此，HashDB 设计了引用计数和节点使用追踪机制来判断哪些节点不再使用并从缓存中清除。
+
+###### TrieDB 之 PathDB
+PathDB 是 TrieDB 的一种新后端实现。它改变了 Trie 节点在磁盘上持久化和内存中维护的方式。如前所述，HashDB 是通过节点的哈希进行索引存储的。而这种方法让清除（prune）状态中不再使用的部分变得非常困难。为了解决这一长期问题，Geth 引入了 PathDB。
+PathDB与 HashDB 有几个显著区别：
+&emsp; Trie 节点在数据库中是按照其路径（path）作为键进行存储的。某账户或storage key节点的路径为该账户地址哈希或storage key在trie树上与其他节点公共前缀部分；某个合约的 storage Trie 中的节点，其路径前缀包含该账户地址哈希。
+
+```
+account trie node key = Prefix(1byte) || COMPACTED(node_path)
+storage trie node key = Prefix(1byte) || account hash(32byte) || COMPACTed(node_path）
+```
+
+&emsp;HashDB 会定期把每个区块的完整状态刷盘。这意味着即使是你并不关心的旧区块，也会残留完整状态。而 PathDB 始终只在磁盘上维护一棵 Trie。每个区块只更新同一棵 Trie。因为使用路径作为键，节点的修改仅需覆盖旧节点即可；被清除的节点也可以安全删除，因为没有其他 Trie 会引用它们。
+&emsp;被持久化的这棵 Trie 并非链的最新头部，而是落后头部至少 128 个区块。最近 128 个区块的 Trie 更改则分别存在内存中，用于应对短链重组（reorg）；
+&emsp;如果出现更大的 reorg，PathDB会利用 freezer 中预存的每个区块的 state diff（状态差异）进行逆应用（rollback），将磁盘状态回滚至分叉点。
 
 <!-- Content_END -->
