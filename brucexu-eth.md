@@ -896,7 +896,7 @@ Many block construction pipeline designs end up increasing slot times. It can be
 
 About 30% of the ETH supply is actively staking, and more than enough. If it grows, researchers fear a different scenario: the risks that would arise if almost all ETH becomes staked.
 
-- Staking turns from being a profitable task for specialists into a duty for all ETH holders. 
+- Staking turns from being a profitable task for specialists into a duty for all ETH holders.
 - Credibility of the slashing mechanism weakens if almost all ETH is staked
 - A single liquid staking token could take over the bulk of the stake and even taking over "money" network effects from ETH itself
 - Ethereum needlessly issuing an extra ~1m ETH/year. In the case where one liquid staking token gets dominant network effect, a large portion of this value could potentially even get captured by the LST.
@@ -913,7 +913,7 @@ Another important topic here is MEV capture. Today, revenue from MEV (eg. DEX ar
 
 - It is a volatile revenue source, as each individual staker only gets it when they propose a block, which is once every ~4 months today. This creates an incentive to join pools for more stable income.
 - It leads to an unbalanced allocation of incentives: too much for proposing, too little for attesting.
-- It makes stake capping very difficult to implement: even if the "official" return rate is zero, the MEV revenue alone may be enough to drive all ETH holders to stake. 
+- It makes stake capping very difficult to implement: even if the "official" return rate is zero, the MEV revenue alone may be enough to drive all ETH holders to stake.
 
 We can solve these problems by finding a way to make MEV revenue legible to the protocol, and capturing it.
 
@@ -925,7 +925,24 @@ Three ways:
 - Stake capping (via changing issuance curve)
 - Two-tiered staking
 
+# 2025.07.01
 
+## https://vitalik.eth.limo/general/2024/10/20/futures3.html
 
+Today, the cheapest VPSes that can run an Ethereum node cost about $60 per month, primarily due to hard disk storage costs. For a 32 ETH staker ($84,000 at the time of this writing), this decreases APY by (60 \* 12) / 84000 ~= 0.85% .
+
+In the Verge, statelessness will remove storage space requirements, which may be sufficient on its own, and then L1 EVM validity proofs will make costs completely trivial.
+
+MEV burn arguably helps solo staking. MEV burn core mechanism: Proposer Auction Multiple proposers bid -> Highest bidder wins and must burn their bid amount.
+
+## Application layer solutions
+
+How to use application-layer strategies for solving centralization risks?
+
+- Specialized staking hardware solutions: a node like dappnode + more services: running locally hosted LLMs + decentralized VPN
+- Squad staking: this solution from Obol allows multiple people to stake together in an M-of-N format.
+- Airdrops - Starknet gave an airdrop to solo stakers.
+- Decentralized block building marketplaces - using a combination of ZK, MPC and TEEs, it's possible to create a decentralized block builder that participates in, and wins, the APS auction game, but at the same time provides pre-confirmation privacy and censorship resistance guarantees to its users.
+- Application-layer MEV minimization - individual applications can be built in a way that "leaks" less MEV to L1, reducing the incentive for block builders to create specialized algorithms to collect it.
 
 <!-- Content_END -->
