@@ -765,4 +765,22 @@ storage trie node key = Prefix(1byte) || account hash(32byte) || COMPACTed(node_
 &emsp;被持久化的这棵 Trie 并非链的最新头部，而是落后头部至少 128 个区块。最近 128 个区块的 Trie 更改则分别存在内存中，用于应对短链重组（reorg）；
 &emsp;如果出现更大的 reorg，PathDB会利用 freezer 中预存的每个区块的 state diff（状态差异）进行逆应用（rollback），将磁盘状态回滚至分叉点。
 
+### 2025.07.01
+#### RawDB
+在 Geth 中，rawdb 是一个底层数据库读写模块，它直接封装了对状态、区块链数据、Trie 节点等核心数据的存取逻辑，是整个存储系统的基础接口层。它并不直接暴露给 EVM 或业务逻辑层，而是作为内部工具服务于如 TrieDB、StateDB、BlockChain 等模块的持久化操作。rawdb 和 trie 一样，并不直接存储数据本身，它们都是对底层数据库的抽象封装层，负责定义存取规则，而非执行最终的数据落盘或读取。可以把 rawdb 看作是 Geth 的“硬盘驱动器”，它定义了所有核心链上数据的键值格式和访问接口，负责确保不同模块可以统一、可靠地读写数据。虽然在直接开发中很少会使用它，但它是整个 Geth 存储层最基础、最关键的一环。
+
+##### 核心功能
+源码中，rawdb 主要定位于core/rawdb/accessors_trie.go。rawdb 提供了大量 ReadXxx 和 WriteXxx 等读写方法，用于标准化地访问不同类型的数据。例如：
+&emsp;区块数据（core/rawdb/accessors_chain.go）：ReadBlock, WriteBlock, ReadHeader等
+&emsp;状态数据（core/rawdb/accessors_trie.go）：WriteLegacyTrieNode, ReadTrieNode等
+&emsp;总体元数据：如总难度、最新头区块哈希、创世信息等
+
+这些方法通常以约定好的 key 前缀（如 h 表示 header, b 表示 block, a 表示 AccountTrieNode）组织数据在底层数据库中（LevelDB 或 PebbleDB）。
+##### 与 TrieDB 的关系
+
+TrieDB 本身并不直接操作硬盘，它把具体的读写委托给 rawdb。而 rawdb 又会调用更底层的 ethdb.KeyValueStore 接口，这可能是 LevelDB、PebbleDB 或内存数据库。例如，写入 Trie相关的数据（账户、存储槽等）时:
+
+&emsp;基于HashDB 的 Trie 节点采用rawdb.WriteLegacyTrieNode 等方法负责将以 (hash, rlp-encoded node) 的形式写入数据库。
+&emsp;基于PathDB的 Trie 节点则采用WriteAccountTrieNode, WriteStorageTrieNode 等方法将以（path, rlp-encoded node)的形式写入数据库。
+
 <!-- Content_END -->
