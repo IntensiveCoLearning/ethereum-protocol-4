@@ -1036,4 +1036,38 @@ EVM 使用事务模型：
 1. ZK-EVMs (Zero-Knowledge EVMs)：零知识 EVMs，一种利用零知识证明技术来验证EVM计算的解决方案，旨在极大降低节点硬件要求。
 
 
+## 2025.7.2
+
+[![WX20250702-132114-2x.png](https://i.postimg.cc/gkrrKNj1/WX20250702-132114-2x.png)](https://postimg.cc/4mkJfvz1)
+[![WX20250702-132134-2x.png](https://i.postimg.cc/JhCnM8xW/WX20250702-132134-2x.png)](https://postimg.cc/ZWjZx1Xf)
+[![WX20250702-132152-2x.png](https://i.postimg.cc/jj6jj13n/WX20250702-132152-2x.png)](https://postimg.cc/Jyn86pLR)
+
+### 术语表
+- The Verge： 以太坊路线图的阶段之一，旨在使链验证变得极度资源高效，以至于移动设备也能默认进行完全验证。
+- 完全验证节点 (Fully-verifying node)： 运行在用户计算机上，独立验证区块链所有规则和交易的节点，无需信任任何第三方。
+- 无状态验证 (Stateless validation)： 一种技术，允许节点在不存储整个以太坊状态的情况下验证区块，通过接收包含所需状态数据和加密证明的“见证”实现。
+- 见证 (Witness)： 在无状态验证中，随区块一起提供的额外数据，包括区块访问的状态值及其正确性的加密证明。
+- Verkle 树 (Verkle trees)： 一种新的树结构，使用椭圆曲线向量承诺，能够生成更紧凑的加密证明，实现无状态验证。与 Merkle Patricia 树相比，其证明长度更短。
+- STARKs (Scalable Transparent ARguments of Knowledge)： 一种零知识证明系统，具有可扩展性和透明性，用于证明计算的完整性。在 The Verge 中，可用于证明状态转换或包裹 Merkle 分支。
+- Merkle Patricia 树 (MPT)： 以太坊当前使用的状态树结构，是一种十六叉树，用于存储账户余额、合约代码和存储等状态信息。
+- 十六叉树 (Hexary tree)： Merkle Patricia 树的结构特点，每个节点有 16 个子节点。
+- 二进制树 (Binary tree)： 一种树结构，每个节点最多有两个子节点。在证明系统中通常比十六叉树更高效。
+- Merkelized Code： 将智能合约代码也纳入 Merkle 树结构中，使得访问代码的证明更加高效，无需提供整个代码。
+- Poseidon： 一种专门设计用于 STARK 友好型（即易于用 STARK 证明）的哈希函数。
+- SHA256 / BLAKE： 传统的、更“保守”的哈希函数，被认为安全性更高，但 STARK 证明效率相对较低。
+- ECADDs (Elliptic Curve Additions)： 椭圆曲线点加法操作，是 BLS 签名验证中的一个基本组成部分。
+- 配对 (Pairings)： 一种高级的椭圆曲线密码学操作，用于验证 BLS 聚合签名，计算成本比 ECADDs 高得多。
+- 多维 Gas (Multidimensional gas)： 一种提案，为不同类型的资源（如 calldata、计算、状态访问）设置独立的 Gas 限制，以更准确地反映其底层硬件成本。
+- 延迟状态根计算 (Delayed state root computation)： 一种优化策略，将区块的状态根计算延迟到区块之后的下一个 slot，为证明生成提供更多时间。
+- EVM (Ethereum Virtual Machine)： 以太坊虚拟机，负责执行智能合约代码。
+- 状态转换函数 (State Transition Function, STF)： 定义区块链如何从一个状态转换到下一个状态的函数，输入为前一状态和区块，输出为后一状态。
+- SNARKs (Succinct Non-interactive ARguments of Knowledge)： 另一种零知识证明系统，特点是证明简洁且验证非交互。
+- 单槽最终性 (Single-Slot Finality, SSF)： 以太坊路线图中的一个目标，旨在将区块最终性时间缩短到一个 slot（约 12 秒）。
+- Orbit SSF： 一种旨在降低单人质押最低余额要求，并可能影响委员会规模的机制。
+- EIP-4762： 旨在改变 Gas 成本的以太坊改进提案，特别是与无状态验证相关的。
+- EIP-7667： 提高传统哈希函数和预编译的 Gas 成本，以使其更能反映其证明成本。
+- EIP-4444： 提议客户端不再需要存储完整的历史数据，而是将历史数据存储在像 torrents 或 Portal network 这样的分布式系统中。
+- SSZ (Simple Serialize)： 以太坊中使用的序列化格式，旨在提高效率和证明友好性。
+
+
 <!-- Content_END -->
