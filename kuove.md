@@ -783,4 +783,37 @@ TrieDB 本身并不直接操作硬盘，它把具体的读写委托给 rawdb。�
 &emsp;基于HashDB 的 Trie 节点采用rawdb.WriteLegacyTrieNode 等方法负责将以 (hash, rlp-encoded node) 的形式写入数据库。
 &emsp;基于PathDB的 Trie 节点则采用WriteAccountTrieNode, WriteStorageTrieNode 等方法将以（path, rlp-encoded node)的形式写入数据库。
 
+### 2025.07.02
+#### EthDB
+在 Geth 中，ethdb 是整个存储系统的核心抽象，它扮演着“生命之树”的角色——深深扎根于磁盘，向上传递支持至 EVM 与执行层各个组件。
+其主要目的是屏蔽底层数据库实现的差异，为整个 Geth 提供统一的键值读写接口。正因如此，Geth 在任意地方都不直接使用具体的数据库（如 LevelDB、PebbleDB、MemoryDB等），而是通过 ethdb 提供的接口进行数据访问。
+
+##### 接口抽象与职责划分
+源码中，ethdb 主要定位于ethdb/database.go。ethdb 中最核心的接口是 KeyValueStore(),它定义了常见的键值操作方法：
+```
+type KeyValueStore interface {
+	Has(key []byte) (bool, error)
+	Get(key []byte) ([]byte, error)
+	Put(key []byte, value []byte) error
+	Delete(key []byte) error
+}
+```
+这套接口非常简洁，覆盖了基础读写操作。而扩展接口 ethdb.Database 则在此基础上加入了对 freezer 冷存储的读写支持（AncientStore），主要用于链数据（如历史区块、交易回执）的管理：新近区块保存在 KV 存储中，较老的则迁移至 freezer。
+
+此外，ethdb 还提供了多种具体实现版本：
+&emsp;LevelDB：最早期的默认实现，稳定成熟。
+&emsp;PebbleDB：目前推荐使用的默认实现，更快、资源效率更高。
+&emsp;RemoteDB：用于远程状态访问场景，在轻节点、验证者或模块化执行环境中尤为重要。
+&emsp;MemoryDB：完全内存实现，常用于 dev 模式和单元测试。
+这让 Geth 能够灵活地在不同场景间切换存储后端，比如开发调试使用 MemoryDB，主网上线使用 PebbleDB。
+
+##### 生命周期与模块贯通
+每个 Geth 节点启动时，都会创建唯一的 ethdb 实例，这个对象贯穿程序始终，直到节点关闭。在结构设计上，它被注入到 core.Blockchain 中，进而传递到 StateDB、TrieDB 等模块，成为全局共享的数据访问入口。
+
+正因为 ethdb 抽象了底层数据库细节，Geth 的其他组件才能专注于各自的业务逻辑，比如：
+&emsp;StateDB 只关心账户和存储槽；
+&emsp;TrieDB 只关心如何存储和查找 Trie 节点；
+&emsp;rawdb 只关心如何组织链数据的键值布局；
+这些上层组件都无需感知数据是存在哪个具体数据库引擎里。
+
 <!-- Content_END -->
