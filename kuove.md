@@ -816,4 +816,66 @@ type KeyValueStore interface {
 &emsp;rawdb 只关心如何组织链数据的键值布局；
 这些上层组件都无需感知数据是存在哪个具体数据库引擎里。
 
+### 2025.07.03
+#### 六种 DB 的创建顺序和调用链
+##### 创建顺序：
+整体创建顺序为ethdb → rawdb/TrieDB → state.Database → stateDB → trie，源码中具体调用链如下:
+```
+【节点初始化阶段】
+MakeChain
+└── MakeChainDatabase
+└── node.OpenDatabaseWithFreezer
+└── node.openDatabase
+└── node.openKeyValueDatabase
+└── newPebbleDBDatabase / remotedb
+↓
+ethdb.Database
+↓
+rawdb.Database (封装 ethdb)
+└── rawdb.NewDatabaseWithFreezer(ethdb)
+↓
+trie.Database (TrieDB)
+└── trie.NewDatabase(ethdb)
+└── backend: pathdb.New(ethdb) / hashdb.New(ethdb)
+↓
+state.Database (cachingDB)
+└── state.NewDatabase(trieDB)
+↓
+【区块处理阶段】
+chain.InsertChain
+└── bc.insertChain
+└── state.New(root, state.Database)
+↓
+state.StateDB
+└── stateDB.OpenTrie()
+└── stateDB.OpenStorageTrie()
+↓
+trie.Trie / SecureTrie
+```
+
+##### 生命周期一览
+| DB模块    | 创建时机 |  生命周期 | 主要职责|
+| ---------------- | ---------------------------- | ---------------- | ---------------------------- |
+|ethdb.Database	|节点初始化|	程序全程	|抽象底层存储，统一接口（LevelDB / PebbleDB / Memory）|
+|rawdb|	  包裹 ethdb 调用|	不存储数据本身	|提供区块/receipt/总难度等链数据的读写接口|
+|TrieDB	|core.NewBlockChain()	|程序全程	|缓存+持久化 PathDB/HashDB 节点|
+|state.Database|	core.NewBlockChain()	|程序全程|	封装 TrieDB，合约代码缓存，后期支持 Verkle 迁移\
+|state.StateDB|	每个区块执行前创建一次	|区块执行期间	|管理状态读写，计算状态根，记录状态变更|
+|trie.Trie|	每次账户或slot访问时创建	|临时，不存储数据本身|	负责 Trie 结构修改和根哈希计算|
+
+##### HashDB 和 PathDB 状态提交和读取机制详细对比
+区块执行完毕后StateDB会调用func (s ***StateDB**) **Commit**(block uint64, deleteEmptyObjects bool, noStorageWiping bool)，并触发如下存储状态更新:
+&emsp; 通过ret, err := s.**commit**(deleteEmptyObjects, noStorageWiping)收集 Trie 状态树涉及到的所有更新
+```
+func (s *StateDB) commit(deleteEmptyObjects bool, noStorageWiping bool) (*stateUpdate, error) {
+...
+    newroot, set := s.trie.Commit(true)
+    root = newroot
+    ...
+    }
+```
+&emsp;其中调用到的trie.Commit方法会把所有的节点（不论是short节点还是full节点）塌缩为hash节点t.root = **newCommitter**(nodes, t.tracer, collectLeaf).**Commit**(t.root, t.uncommitted > 100)，并收集所有脏节点返回给 StateDB
+&emsp;StateDB利用收集到的所有脏节点更新TrieDB缓存层：
+&emsp;&emsp;HashDB在内存中维护了dirties map[**common**.**Hash**]***cachedNode**这个对象来缓存这些更新，并更新相应的trie节点引用，缓存有大小限制
+&emsp;&emsp;PathDB则在内存中维护了tree ***layerTree** 这个对象并增加一层diff来缓存这些更新，最多可缓存128层diff
 <!-- Content_END -->
