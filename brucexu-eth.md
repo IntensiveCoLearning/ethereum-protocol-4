@@ -945,4 +945,71 @@ How to use application-layer strategies for solving centralization risks?
 - Decentralized block building marketplaces - using a combination of ZK, MPC and TEEs, it's possible to create a decentralized block builder that participates in, and wins, the APS auction game, but at the same time provides pre-confirmation privacy and censorship resistance guarantees to its users.
 - Application-layer MEV minimization - individual applications can be built in a way that "leaks" less MEV to L1, reducing the incentive for block builders to create specialized algorithms to collect it.
 
+# 2025.07.03
+
+## https://vitalik.eth.limo/general/2024/10/23/futures4.html
+
+Today, running a node is possible on a consumer laptop (including the one being used to write this post), but doing so is difficult. The Verge is about changing this, and making fully-verifying the chain so computationally affordable that every mobile wallet, browser wallet, and even smart watch is doing it by default.
+
+Originally, the "Verge" referred to the idea of moving Ethereum state storage to Verkle trees - a tree structure that allows for much more compact proofs, enabling stateless validation of Ethereum blocks.
+
+the Verge represents a much larger vision focused on enabling maximally resource-efficient verification of the Ethereum chain, which includes not just stateless validation technology, but also verifying all Ethereum execution with SNARKs.
+
+**Merkle Patricia tree:**
+
+Ethereum currently uses Merkle Patricia trees to store all account states (balances, nonces, contract code, storage).
+
+1. Witness Size Problem
+
+Example: Proving Account 0x1234...5678 has 100 ETH
+
+Witness includes:
+
+- Root hash (32 bytes)
+- All intermediate node hashes on path (32 bytes each)
+- Sister nodes at each level (32 bytes each)
+- Total: Often 3,000-12,000 bytes per proof!
+
+2. Wide Tree Structure
+
+- Each branch node has 16 children (hexary tree)
+- Tree is wide but relatively shallow
+- Each level requires 32-byte hash proofs
+
+**Verkle tree:**
+
+Verkle trees use vector commitments instead of traditional hashes, enabling much smaller proofs.
+
+- 256 children per node
+- Fewer levels, wider tree
+
+TODO more details
+
+The natural alternative to Merkle trees is skipping straight to using a STARK of Merkle branches in a binary tree.
+
+long-term focus on SNARK-verifying the whole chain, how?
+
+If there are 1000 tx in a block on Ethereum, traditional verification would re-execute all txs on each node to verify: 1. produce the same state. 2. no evm issues, etc. Then, confirm the block is valid. Let's say it takes 10 seconds, and 1MB for all the data.
+
+If we use SNARKs, ZK-EVM Prover generate SNARK Proof for txs, later verifier can verify the proof in 10ms, and 200KB proof. Therefore, we can verify in the light client.
+
+```
+# Traditional sync: Download and verify everything
+ethereum_node --sync-mode=full
+# Downloads: ~800GB blockchain data
+# Verifies: Every transaction since genesis
+# Time: Days to weeks
+
+# SNARK sync: Verify proofs only
+ethereum_node --sync-mode=snark
+# Downloads: ~100MB of proofs
+# Verifies: Cryptographic proofs only
+# Time: Minutes to hours
+```
+
+### Current Challenges & Solutions
+
+1. Proving Time Too Slow
+2. Memory Requirements
+
 <!-- Content_END -->
