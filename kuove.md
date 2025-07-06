@@ -816,4 +816,139 @@ type KeyValueStore interface {
 &emsp;rawdb 只关心如何组织链数据的键值布局；
 这些上层组件都无需感知数据是存在哪个具体数据库引擎里。
 
+### 2025.07.03
+#### 六种 DB 的创建顺序和调用链
+##### 创建顺序：
+整体创建顺序为ethdb → rawdb/TrieDB → state.Database → stateDB → trie，源码中具体调用链如下:
+```
+【节点初始化阶段】
+MakeChain
+└── MakeChainDatabase
+└── node.OpenDatabaseWithFreezer
+└── node.openDatabase
+└── node.openKeyValueDatabase
+└── newPebbleDBDatabase / remotedb
+↓
+ethdb.Database
+↓
+rawdb.Database (封装 ethdb)
+└── rawdb.NewDatabaseWithFreezer(ethdb)
+↓
+trie.Database (TrieDB)
+└── trie.NewDatabase(ethdb)
+└── backend: pathdb.New(ethdb) / hashdb.New(ethdb)
+↓
+state.Database (cachingDB)
+└── state.NewDatabase(trieDB)
+↓
+【区块处理阶段】
+chain.InsertChain
+└── bc.insertChain
+└── state.New(root, state.Database)
+↓
+state.StateDB
+└── stateDB.OpenTrie()
+└── stateDB.OpenStorageTrie()
+↓
+trie.Trie / SecureTrie
+```
+
+##### 生命周期一览
+| DB模块    | 创建时机 |  生命周期 | 主要职责|
+| ---------------- | ---------------------------- | ---------------- | ---------------------------- |
+|ethdb.Database	|节点初始化|	程序全程	|抽象底层存储，统一接口（LevelDB / PebbleDB / Memory）|
+|rawdb|	  包裹 ethdb 调用|	不存储数据本身	|提供区块/receipt/总难度等链数据的读写接口|
+|TrieDB	|core.NewBlockChain()	|程序全程	|缓存+持久化 PathDB/HashDB 节点|
+|state.Database|	core.NewBlockChain()	|程序全程|	封装 TrieDB，合约代码缓存，后期支持 Verkle 迁移\
+|state.StateDB|	每个区块执行前创建一次	|区块执行期间	|管理状态读写，计算状态根，记录状态变更|
+|trie.Trie|	每次账户或slot访问时创建	|临时，不存储数据本身|	负责 Trie 结构修改和根哈希计算|
+
+##### HashDB 和 PathDB 状态提交和读取机制详细对比
+区块执行完毕后StateDB会调用func (s ***StateDB**) **Commit**(block uint64, deleteEmptyObjects bool, noStorageWiping bool)，并触发如下存储状态更新:
+&emsp; 通过ret, err := s.**commit**(deleteEmptyObjects, noStorageWiping)收集 Trie 状态树涉及到的所有更新
+```
+func (s *StateDB) commit(deleteEmptyObjects bool, noStorageWiping bool) (*stateUpdate, error) {
+...
+    newroot, set := s.trie.Commit(true)
+    root = newroot
+    ...
+    }
+```
+&emsp;其中调用到的trie.Commit方法会把所有的节点（不论是short节点还是full节点）塌缩为hash节点t.root = **newCommitter**(nodes, t.tracer, collectLeaf).**Commit**(t.root, t.uncommitted > 100)，并收集所有脏节点返回给 StateDB
+&emsp;StateDB利用收集到的所有脏节点更新TrieDB缓存层：
+&emsp;&emsp;HashDB在内存中维护了dirties map[**common**.**Hash**]***cachedNode**这个对象来缓存这些更新，并更新相应的trie节点引用，缓存有大小限制
+&emsp;&emsp;PathDB则在内存中维护了tree ***layerTree** 这个对象并增加一层diff来缓存这些更新，最多可缓存128层diff
+
+```
+func (s *StateDB) commitAndFlush(block uint64, deleteEmptyObjects bool, noStorageWiping bool) (*stateUpdate, error) {
+		...
+		// If trie database is enabled, commit the state update as a new layer
+		if db := s.db.TrieDB(); db != nil {
+			start := time.Now()
+			if err := db.Update(ret.root, ret.originRoot, block, ret.nodes, ret.stateSet()); err != nil {
+				return nil, err
+			}
+			s.TrieDBCommits += time.Since(start)
+		}
+		...
+```
+
+### 2025.07.04
+
+* 当HashDB或PathDB缓存超限时，则会触发flush，通过rawdb提供的相关接口将缓存写入ethdb的实际持久层：
+&emsp;&emsp;全节点HashDB模式下，由于key是hash，所以同一个账户如果被修改，由于底层数据库通过key无法感知是否是同一个账户，不能轻易删除该key及其对应的值，否则可能会影响其他账户状态，所以只会把新修改的KV写入DB，而无法删除旧状态，因此全节点状态很难被修剪。例如两个不同的合约地址A和B实际保存相同的合约代码，他们在HashDB中共享同一个（key为hash，value为合约代码）的存储，若EVM执行后销毁其中一个合约A，另外一个合约B代码和合约A代码在数据库中的key一样，所以不能随意删除数据库中hash为key的值，否则会导致B合约后面读取不到该合约代码了。
+&emsp;&emsp;全节点PathDB模式下，由于key是path，所以同一个账户在底层DB对应的key是一样的，会把同一个账户对应的状态覆盖掉，因此更容易裁剪全节点的状态。因此现在Geth全节点默认采用的是PathDB模式
+&emsp;&emsp;由于 归档（archive）节点需要存储每一个区块对应的状态，此时HashDB则更具优势，因为不同区块下很多账户的数据实际上并未修改，基于hash作为key相当于自动具备裁剪的特性；而此时PathDB则需要保存每个区块下所有账户的状态，导致状态会超级大，因此Geth的archive节点只支持HashDB模式
+#### 实例：全节点下 HashDB 和 PathDB 实际落盘对比
+
+假设左边的 Trie 是 MPT 的初始状态，其中红色的是将被修改的节点；右边的则是 MPT 的新状态，绿色表示之前的4个红色节点被修改了。
+![对比](https://forum.lxdao.io/uploads/default/original/2X/9/9474f9fbe78e2dcfd930705e346dea213a845040.jpeg)
+* 在HashDB模式下，由于 C/D/E节点更改后hash必定会发生变化，因此尽管 C/D/E 节点对应的三个账户之前已经落盘了，这三个账户对应的新节点 C’/D’/E’ 还是需要落盘，且一旦持久化之后就很难删除这些旧节点了。磁盘更新之前（左图）和之后（右图）的状态如下，其中collapsed Node可以简单理解为节点存储的值。
+![HashDB模式状态对比](https://forum.lxdao.io/uploads/default/optimized/2X/5/5d78b82d6a28e91cbf92e7920fdd331b7d5bc78d_2_1380x642.jpeg)
+* 在PathDB模式下，虽然 C/D/E 节点对应的值发生了变化，但是由于底层存储的 key(path) 不变，在持久化是可以直接替换这三个节点对应的值为 C’/D’/E’ 就可以了，磁盘数据并不会有过多冗余（虽然有些相同的合约可能会在不同的 path下都保存了一份，但是影响不大）。磁盘更新之前（左图）和之后（右图）的状态如下。
+![PathDB状态对比](https://forum.lxdao.io/uploads/default/original/2X/c/c291834661717c94246ad3417393b676fcf62503.png)
+
+#### 实例: HashDB 和 PathDB 读取账户对比
+在core/rawdb/accessors_trie.go中增加如下 debug 代码，测试 stateDB 读取0xB3329fcd12C175A236a02eC352044CE44d （account hash:0x**aea7c67d**a6a9bdb230dd07d0e96626e5e57c9cba04dc8039c923baefe55eacd1）涉及到的Trie节点数据库读取:
+```
+func ReadAccountTrieNode(db ethdb.KeyValueReader, path []byte) []byte {
+	fmt.Println("PathDB read:", hexutil.Encode(accountTrieNodeKey(path)))
+	data, _ := db.Get(accountTrieNodeKey(path))
+	return data
+}
+
+func ReadLegacyTrieNode(db ethdb.KeyValueReader, hash common.Hash) []byte {
+	fmt.Println("HashDB read:", hash)
+	data, err := db.Get(hash.Bytes())
+	if err != nil {
+		return nil
+	}
+	return data
+}
+```
+PathDB 读取到的 Trie 节点如下，可看出读取的是账户地址 hash 的前 8 位相应 path 的节点:
+```
+#0x41为前缀，多加的0是nibbles（半字节） 的对齐需要
+PathDB read: 0x410a
+PathDB read: 0x410a0e
+PathDB read: 0x410a0e0a
+PathDB read: 0x410a0e0a07
+PathDB read: 0x410a0e0a070c
+PathDB read: 0x410a0e0a070c06
+PathDB read: 0x410a0e0a070c0607
+PathDB read: 0x410a0e0a070c06070d
+```
+HashDB 读到的 Trie 节点如下，可以看出读取是的 hash 为 key 对应的节点:
+```
+HashDB read: 0xb01e32b0c38555bb27f1a924b8408824f97dd8d70f096b218d397906a9095385
+HashDB read: 0x99d38ce254e6c35a49504345a30e94b4ea08338279385bae33feaaa11c3a0a00
+HashDB read: 0xfcc42d902aa9107b83ee7839a8bc61b370cc5eac9ee60db1af7165daf6c3f76b
+HashDB read: 0x3232bc99a88337d2aea2e8c237eb5b4ebb9366ff5bdd94b965ac6f918bd6303f
+HashDB read: 0x04ae6f0462f6c0c7e5827dc46fcd69329483d829c39f624744f7b55c09c2cc96
+HashDB read: 0x22a16c466cc420e8ed97fd484cecc8f73160ee74a56cfc87ff941d1b56ff46f8
+HashDB read: 0xae26238e219065458f314e456265cd9c935e829ba82aebe6d38bacdbb14582f3
+HashDB read: 0xe9ce7770c224e563b0c407618b7b7d8614da3d5da89f3960a3bec97e78fc0ae0
+HashDB read: 0x2c7d134997a5c3e0bf47ff347479ee9318826f1c58689b3d9caeac77287c3af8
+```
+总体来说，PathDB和HashDB均是保持Trie数据结构来存储状态数据，只是PathDB以Trie节点的path作为key，而HashDB则是以Trie节点值对应的hash作为key，两者均存储值相同均为Trie节点的值。
 <!-- Content_END -->
