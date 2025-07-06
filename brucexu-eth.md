@@ -1012,4 +1012,18 @@ ethereum_node --sync-mode=snark
 1. Proving Time Too Slow
 2. Memory Requirements
 
+# 2025.07.04
+
+研究了一些 EIP7917 的东西，打算做一个 EPF 的 Lodestar 的 EIP7917 的实现。
+
+不过对面提到信息已经过时，这个 PR 已经完成了 https://github.com/ChainSafe/lodestar/pull/7988
+
+# 2025.07.05
+
+继续寻找可以做的，发现了一个比较简单的任务 https://github.com/ChainSafe/lodestar/issues/6050
+
+这个任务的好处是可以顺便熟悉下 ephemeral 的效果和功能，作为 test net 也是比较微缩型的一个以太坊，通过这个任务可以熟悉下 lodestar 的代码。
+
+# 2025.07.06
+
 <!-- Content_END -->
