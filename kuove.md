@@ -1063,4 +1063,47 @@ Geth 中的这 6 个数据库模块各自承担不同层级的职责，形成了
 
 这些模块通过职责分离与接口隔离，协同构建了一个既灵活又高效的状态管理体系，使 Geth 能在复杂链状态与交易执行中保持良好性能与可维护性。
 
+### 2025.07.08
+
+#### p2p 网络设计概述
+
+##### DevP2P 简介
+
+以太坊执行层 p2p 网络功能的实现基于 [DevP2P 协议栈](https://github.com/ethereum/devp2p/tree/master)所定义的标准，p2p 网络层独立于共识机制（无论是之前的 PoW 还是当前的 PoS，后者由共识层协调）。Geth 的网络架构包含两个并行工作的协议栈：基于 UDP 的发现协议栈（主要用于网络节点间发现）和基于 TCP 的通信协议栈（主要用于节点间数据交换与同步）。
+
+##### DevP2P 协议栈
+
+DevP2P 并非指单一协议，而是为以太坊 p2p 网络定制的一套网络协议。 其设计不局限于特定的区块链，但主要服务与以太坊生态的需求。其核心包括：
+
+1. 节点发现层： 基于 UDP 协议，用于在 p2p 网络上定位其他以太坊节点。包含如 DiscoveryV4、DiscoveryV5、DNS Discovery 等协议。
+2. 数据传输层： 基于 TCP 的协议，为节点间提供加密且经过身份验证的通信会话。主要由 RLPx 传输协议提供支持，基于此协议还衍生出多种应用层协议。
+3. 应用层子协议：在 RLPx 建立的节点发现和安全连接的基础之上，处理节点间的具体数据交互和应用逻辑。这些协议使得节点能够进行区块链同步、交易传播、状态查询等操作。包含如核心的 ETH 协议（Ethereum Wire Protocol）、服务轻客户端的 LES 协议（Light Ethereum Subprotocol）、用于快照同步的 SNAP 协议，以及 WIT（Witness Protocol）、PIP (Parity Light Protocol) 。
+
+以下为 DevP2P 协议栈整体结构图：
+
+![DevP2P协议栈整体结构图](https://forum.lxdao.io/uploads/default/original/2X/f/fbdbb8ff35bfdba29d19f486bef9553d996db696.png)
+
+应用层子协议简要说明：
+主要功能
+
+| 协议                                             | 版本   | 主要功能                                      |
+| ------------------------------------------------ | ------ | --------------------------------------------- |
+| 以太坊线路协议（Ethereum Wire Protocol）         | eth/68 | 区块链同步和交易交换的主协议                  |
+| 以太坊快照协议（Ethereum Snapshot Protocol）     | snap/1 | 高效状态快照交换                              |
+| 轻量级以太坊子协议（Light Ethereum Subprotocol） | les/4  | 轻客户端协议（暂未在 Geth 中实现）            |
+| Parity 轻协议（Parity Light Protocol）           | pip/1  | Parity 对轻客户端的实现（暂未在 Geth 中实现） |
+| 以太坊见证协议（Ethereum Witness Protocol）      | wit/0  | 节点间见证数据交换（暂未在 Geth 中实现）      |
+
+##### DevP2P 与 LibP2P 的关系
+
+[LibP2P](https://docs.libp2p.io/concepts/introduction/overview/)（library peer-to-peer）是一个 p2p 网络框架，与以太坊的 DevP2P 在功能定位上有相似之处，它通过一系列协议、规范和库为 p2p 应用的开发提供支持。尽管两者存在相似性，以太坊在其发展初期（约 2014-2015 年）并未选择采用 LibP2P 作为其 P2P 层。
+
+原因是以太坊团队开发 p2p 网络模块（最终形成了 DevP2P）的关键时期，LibP2P 虽然已经作为 IPFS 项目的一部分，但它在当时尚未成熟到能够被以太坊直接集成。为了满足以太坊自身的需求，以太坊的开发者们自行设计和实现了一套 p2p 协议。
+
+与 DevP2P 不同，LibP2P 最开始的核心目标便是构建一个更具普适性、高度模块化的 P2P 网络基础，旨在服务多样化的去中心化应用，而非仅仅应用在某一特定平台或应用场景。
+
+DevP2P 可以被视为一个协议集合，明确定义了以太坊所需的组件，如 ENR、discv5 和 RLPx。而 LibP2P 更像是一个编程库集合，提供了可组合的模块来构建各种 P2P 功能，包括传输、流多路复用、安全通道、节点发现、发布/订阅消息传递等。
+
+目前在以太坊共识层，如 Lighthouse，Prysm，Teku，Nimbus 等客户端，主要采用 LibP2P，共识层利用了 LibP2P 的传输层实现（TCP, QUIC）、加密（Noise）、流多路复用（mplex, yamux）、节点发现（基于 ENR 的 discv5）以及强大的发布/订阅系统（gossipsub）来高效广播证明和区块。
+
 <!-- Content_END -->
