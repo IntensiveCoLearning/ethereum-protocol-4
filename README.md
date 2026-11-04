@@ -154,7 +154,7 @@ Passcode: 955074
 | [aliceyzhsu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/aliceyzhsu.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ✅ | ⭕️ | ⭕️ | ⭕️ | ❌ | | | | | | | | | |
 | [Juktong](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/Juktong.md) | ⭕️ | ✅ | ✅ | ✅ | ⭕️ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ✅ | ✅ | ❌ | | | | | | | | | | | | | |
 | [rockyfang](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/rockyfang.md) | ⭕️ | ✅ | ✅ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | |
-| [EchoZheng2333](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/EchoZheng2333.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ⭕️ | ✅ | ✅ |   | ⭕️ | ❌ | | | | | | |
+| [EchoZheng2333](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/EchoZheng2333.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ✅ | ⭕️ | ✅ | ✅ | ⭕️ |   | ❌ | | | | | | |
 | [jitash](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/jitash.md) | ⭕️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ✅ | ✅ | ⭕️ | ✅ | ⭕️ | ✅ | ❌ | | | | | | | | | | | | |
 | [MrWynn](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/MrWynn.md) | ✅ | ✅ | ✅ | ✅ | ✅ | ⭕️ | ⭕️ | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | |
 | [OrionWu](https://github.com/IntensiveCoLearning/ethereum-protocol-4/blob/main/OrionWu.md) | ✅ | ✅ | ⭕️ | ⭕️ | ❌ | | | | | | | | | | | | | | | | | | | | | |
@@ -824,6 +824,7 @@ Passcode: 955074
 
 
 
+
 <!-- STATISTICALDATA_START -->
 ## 统计数据
 
@@ -833,5 +834,5 @@ Passcode: 955074
 - 全勤用户: 
 - 淘汰人数: 15
 - 淘汰率: 93.75%
-- Fork人数: 0
+- Fork人数: 20
 <!-- STATISTICALDATA_END -->
